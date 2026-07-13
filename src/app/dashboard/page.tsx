@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Filter, Users, Clock, MapPin, Plus, Star, TrendingUp, BookOpen, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, SlidersHorizontal, Users, Plus, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import GroupCard from "@/components/GroupCard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { supabase } from "@/lib/supabase";
+import { sanitizeInput } from "@/lib/inputSanitization";
 
 // Interface matching GroupCard expectations
 interface Group {
@@ -66,11 +67,6 @@ export default function Dashboard() {
 
         setGroups(groupsWithMembers);
 
-        // Fetch distinct active members count
-        const { data: membersData, error: membersError } = await supabase
-          .from('group_members')
-          .select('user_id');
-
       } catch (error) {
         console.error('Error fetching groups:', error);
       } finally {
@@ -87,7 +83,7 @@ export default function Dashboard() {
                          group.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesSubject = selectedSubject === "All Subjects" || group.subject === selectedSubject;
     const matchesFrequency = selectedFrequency === "All Frequencies" || group.frequency === selectedFrequency;
-    
+
     return matchesSearch && matchesSubject && matchesFrequency;
   });
 
@@ -109,24 +105,28 @@ export default function Dashboard() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div className="animate-fade-up mb-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <p className="mb-3 flex items-center gap-3 font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-ink-soft">
+                <span aria-hidden className="h-px w-9 bg-purple-700/60" />
+                Your study desk
+              </p>
+              <h1 className="mb-2 font-serif text-4xl font-medium tracking-tight text-ink sm:text-5xl">
                 Dashboard
               </h1>
-              <p className="text-gray-600">
+              <p className="max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg">
                 Discover and join study groups that match your interests
               </p>
             </div>
-            
+
             {/* Create Group Button */}
-            <div className="mt-4 lg:mt-0 w-full lg:w-auto">
-              <Button asChild variant="primary" className="w-full lg:w-auto">
+            <div className="w-full lg:w-auto">
+              <Button asChild variant="primary" size="lg" className="group h-12 w-full rounded-sm px-6 text-sm shadow-[0.25rem_0.25rem_0_0_#241a35] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[0.1rem_0.1rem_0_0_#241a35] lg:w-auto">
                 <Link href="/create-group">
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
                   Create New Group
                 </Link>
               </Button>
@@ -135,47 +135,49 @@ export default function Dashboard() {
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-sm border border-purple-300 p-6 mb-8">
-          <div className="flex flex-col lg:flex-row gap-4">
+        <div className="catalog-toolbar animate-fade-up [animation-delay:100ms]">
+          <div className="catalog-toolbar__row">
             {/* Search */}
-            <div className="flex-1">
+            <div className="catalog-toolbar__search">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
+                  <Search className="h-5 w-5 text-ink-soft" />
                 </div>
                 <Input
                   type="text"
                   placeholder="Search groups, subjects, or topics..."
                   value={searchTerm}
                                           onChange={(e) => setSearchTerm(sanitizeInput(e.target.value, { maxLength: 100 }))}
-                  className="pl-10 border-purple-300"
+                  className="h-10 rounded-sm border-ink/25 bg-paper pl-10 text-sm shadow-none"
                 />
               </div>
             </div>
 
             {/* Filter Toggle */}
             <Button
-              variant="primary"
+              size="lg"
+              variant={showFilters ? "outline" : "primary"}
               onClick={() => setShowFilters(!showFilters)}
-              className="lg:w-auto"
+              aria-expanded={showFilters}
+              className="catalog-toolbar__filter h-10 rounded-sm px-4"
             >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
+              {showFilters ? <X className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />}
+              {showFilters ? "Close" : "Filters"}
             </Button>
           </div>
 
           {/* Filters */}
           {showFilters && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="mt-3 border-t border-dashed border-ink/20 pt-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-soft">
                     Subject
                   </label>
                   <select
                     value={selectedSubject}
                     onChange={(e) => setSelectedSubject(e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="h-12 w-full rounded-sm border border-ink/25 bg-paper px-3 text-sm focus:border-purple-700 focus:ring-purple-700"
                   >
                     {subjects.map((subject) => (
                       <option key={subject} value={subject}>
@@ -186,13 +188,13 @@ export default function Dashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-soft">
                     Frequency
                   </label>
                   <select
                     value={selectedFrequency}
                     onChange={(e) => setSelectedFrequency(e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="h-12 w-full rounded-sm border border-ink/25 bg-paper px-3 text-sm focus:border-purple-700 focus:ring-purple-700"
                   >
                     {frequencies.map((frequency) => (
                       <option key={frequency} value={frequency}>
@@ -208,56 +210,54 @@ export default function Dashboard() {
 
         {/* Results Info */}
         {!loading && filteredGroups.length > 0 && (
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-gray-600 text-sm">
+          <div className="catalog-results-toolbar font-mono text-[10px] uppercase tracking-[0.14em] text-ink-soft">
+            <p>
               Showing {startIndex + 1}-{Math.min(endIndex, filteredGroups.length)} of {filteredGroups.length} groups
             </p>
-            <p className="text-gray-600 text-sm mt-2 sm:mt-0">
-              Page {currentPage} of {totalPages}
-            </p>
+            <p>Page {currentPage} of {totalPages}</p>
           </div>
         )}
 
         {/* Groups Grid */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading study groups...</p>
+          <div className="py-20 text-center">
+            <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-2 border-ink/15 border-t-purple-700"></div>
+            <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-soft">Consulting the catalog...</p>
           </div>
         ) : currentGroups.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {currentGroups.map((group) => (
-                <GroupCard key={group.id} group={group} />
+                <GroupCard key={group.id} group={group} layout="card" />
               ))}
             </div>
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center space-x-2">
+              <nav aria-label="Study groups pagination" className="flex flex-wrap items-center justify-center gap-2 border-t border-ink/15 pt-8">
                 <Button
                   variant="outline"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="flex items-center"
+                  className="h-10 rounded-sm"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Previous
                 </Button>
 
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center gap-1">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
                     // Show first page, last page, current page, and pages around current
-                    const showPage = 
-                      page === 1 || 
-                      page === totalPages || 
-                      page === currentPage || 
+                    const showPage =
+                      page === 1 ||
+                      page === totalPages ||
+                      page === currentPage ||
                       (page >= currentPage - 1 && page <= currentPage + 1);
 
                     if (!showPage) {
                       // Show ellipsis
                       if (page === currentPage - 2 || page === currentPage + 2) {
-                        return <span key={page} className="px-2 text-gray-400">...</span>;
+                        return <span key={page} className="px-2 font-mono text-ink-soft">…</span>;
                       }
                       return null;
                     }
@@ -267,7 +267,9 @@ export default function Dashboard() {
                         key={page}
                         variant={currentPage === page ? "primary" : "outline"}
                         onClick={() => handlePageChange(page)}
-                        className="w-10 h-10 p-0"
+                        aria-label={`Go to page ${page}`}
+                        aria-current={currentPage === page ? "page" : undefined}
+                        className={`h-10 w-10 rounded-sm p-0 ${currentPage === page ? "shadow-[2px_2px_0_#241a35]" : ""}`}
                       >
                         {page}
                       </Button>
@@ -279,30 +281,33 @@ export default function Dashboard() {
                   variant="outline"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="flex items-center"
+                  className="h-10 rounded-sm"
                 >
                   Next
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
-              </div>
+              </nav>
             )}
           </>
         ) : (
-          <div className="text-center py-12">
-            <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {searchTerm || selectedSubject !== "All Subjects" || selectedFrequency !== "All Frequencies" 
-                ? "No study groups found" 
+          <div className="animate-fade-up py-16 text-center sm:py-24">
+            <div className="mx-auto mb-6 grid h-20 w-20 -rotate-2 place-items-center border border-dashed border-ink/30 bg-marker/20">
+              <Users className="h-10 w-10 text-ink-soft" />
+            </div>
+            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-purple-700">Catalog note · 000</p>
+            <h3 className="mb-3 font-serif text-2xl font-medium text-ink sm:text-3xl">
+              {searchTerm || selectedSubject !== "All Subjects" || selectedFrequency !== "All Frequencies"
+                ? "No study groups found"
                 : "No study groups yet"}
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="mx-auto mb-8 max-w-lg leading-relaxed text-ink-soft">
               {searchTerm || selectedSubject !== "All Subjects" || selectedFrequency !== "All Frequencies"
                 ? "Try adjusting your search criteria or create a new study group."
                 : "Be the first to create a study group and start learning together!"}
             </p>
-            <Button asChild variant="primary">
+            <Button asChild variant="primary" size="lg" className="group h-12 rounded-sm px-6 shadow-[0.25rem_0.25rem_0_0_#241a35] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[0.1rem_0.1rem_0_0_#241a35]">
               <Link href="/create-group">
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
                 Create New Group
               </Link>
             </Button>

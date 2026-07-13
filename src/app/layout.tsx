@@ -1,13 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import MobileBottomNav from "@/components/MobileBottomNav";
-import InstallPrompt from "@/components/InstallPrompt";
+import AppShell from "@/components/AppShell";
 import { AuthProvider } from "@/lib/auth";
-import { MaintenanceProvider } from "@/lib/maintenance";
-import { MaintenanceGuard } from "@/components/MaintenanceGuard";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const geistSans = Geist({
@@ -20,11 +15,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  axes: ["opsz"],
+  display: "swap",
+});
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#9333ea',
+  themeColor: '#7c3aed',
 }
 
 export const metadata: Metadata = {
@@ -68,9 +71,9 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/icons/browserconfig.xml" />
-        <meta name="msapplication-TileColor" content="#9333ea" />
+        <meta name="msapplication-TileColor" content="#7c3aed" />
         <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="theme-color" content="#9333ea" />
+        <meta name="theme-color" content="#7c3aed" />
         
         <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
@@ -95,18 +98,11 @@ export default function RootLayout({
 
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
+        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased`}
       >
         <AuthProvider>
-              <div className="min-h-screen flex flex-col">
-                <Navbar />
-                <main className="flex-1 pb-16 md:pb-0">
-                  {children}
-                </main>
-                <Footer />
-                <MobileBottomNav />
-                <InstallPrompt />
-              </div>
+          <AppShell>{children}</AppShell>
         </AuthProvider>
       </body>
     </html>

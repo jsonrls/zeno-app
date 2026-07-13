@@ -3,21 +3,25 @@
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, Loader2, LogIn } from "lucide-react";
+import { AtSign, Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
 import SecureForm from "@/components/SecureForm";
-import PasswordValidation from "@/components/PasswordValidation";
 import { RATE_LIMITS } from "@/lib/security";
 import { validatePassword } from "@/lib/passwordValidation";
-import { sanitizeEmail, sanitizePassword } from "@/lib/inputSanitization";
+import {
+  sanitizeEmail,
+  sanitizeInput,
+  sanitizePassword,
+  sanitizeUsername,
+} from "@/lib/inputSanitization";
 
 export default function Login() {
   const router = useRouter();
   const { signIn } = useAuth();
   const [formData, setFormData] = useState({
-    email: "",
+    identifier: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -33,7 +37,7 @@ export default function Login() {
       const timer = setTimeout(() => {
         setError("");
       }, 1000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [error]);
@@ -41,14 +45,16 @@ export default function Login() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     let sanitizedValue = value;
-    
+
     // Apply appropriate sanitization based on field type
-    if (name === 'email') {
-      sanitizedValue = sanitizeEmail(value);
+    if (name === 'identifier') {
+      // Preserve valid email characters while the address is still being
+      // entered (for example, the dot in `name.surname` before `@`).
+      sanitizedValue = sanitizeInput(value, { maxLength: 254, trim: false });
     } else if (name === 'password') {
       sanitizedValue = sanitizePassword(value);
     }
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: sanitizedValue
@@ -59,10 +65,12 @@ export default function Login() {
     setIsLoading(true);
     setError("");
 
-    const email = sanitizeEmail(formData.get('email') as string);
+    const identifier = (formData.get('identifier') as string).includes('@')
+      ? sanitizeEmail(formData.get('identifier') as string)
+      : sanitizeUsername(formData.get('identifier') as string);
     const password = sanitizePassword(formData.get('password') as string);
 
-    const { data, error } = await signIn(email, password);
+    const { data, error } = await signIn(identifier, password);
 
     if (error) {
       setError(error.message || "Failed to sign in");
@@ -75,25 +83,23 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <div className="flex justify-center mb-6">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center space-x-3 group">
-                <div className="bg-purple-600 text-white w-16 h-16 rounded-xl flex items-center justify-center transition-transform shadow-md">
-                  <span className="font-bold text-4xl">Z</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-2xl text-gray-900">Zeno</span>
-                  <span className="text-xs text-gray-500 -mt-1">Study Groups</span>
-                </div>
-              </Link>
-            </div>
+    <div className="auth-page min-h-screen px-4 py-12 sm:py-16">
+      <div className="relative mx-auto grid w-full max-w-5xl overflow-hidden border border-ink/20 bg-[#fffcf5] shadow-[6px_6px_0_rgba(36,26,53,0.12)] lg:grid-cols-[0.9fr_1.1fr]">
+        <aside className="auth-page__aside hidden p-10 lg:flex lg:flex-col lg:justify-between">
+          <Link href="/" className="font-serif text-2xl font-semibold text-paper">Zeno.</Link>
+          <div>
+            <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.24em] text-marker">Member desk · No. 01</p>
+            <p className="font-serif text-4xl leading-tight text-paper">Better work begins with the right people.</p>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
-          <p className="mt-2 text-gray-600">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-paper/60">Study together · Learn deliberately</p>
+        </aside>
+        <div className="p-6 sm:p-10 lg:p-12">
+        {/* Header */}
+        <div className="mb-9">
+          <Link href="/" className="mb-8 inline-block font-serif text-xl font-semibold text-ink lg:hidden">Zeno.</Link>
+          <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-purple-700">Return to your desk</p>
+          <h1 className="font-serif text-4xl font-medium tracking-tight text-ink sm:text-5xl">Welcome back.</h1>
+          <p className="mt-3 leading-relaxed text-ink-soft">
             Sign in to your Zeno account and continue your learning journey
           </p>
         </div>
@@ -102,28 +108,31 @@ export default function Login() {
         <SecureForm
           onSubmit={handleSecureSubmit}
           rateLimitConfig={RATE_LIMITS.LOGIN}
-          rateLimitIdentifier={formData.email || 'anonymous'}
-          className="space-y-6"
+          rateLimitIdentifier={formData.identifier || 'anonymous'}
+          className="catalog-form space-y-6"
           disabled={isLoading}
         >
-          {/* Email Field */}
+          {/* Email or username field */}
           <div className="space-y-2">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email Address
+            <label htmlFor="identifier" className="block text-sm font-medium text-gray-700">
+              Email or Username
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-gray-400" />
+                <AtSign className="h-5 w-5 text-gray-400" />
               </div>
               <Input
-                id="email"
-                name="email"
-                type="email"
+                id="identifier"
+                name="identifier"
+                type="text"
                 required
-                value={formData.email}
+                autoCapitalize="none"
+                autoCorrect="off"
+                autoComplete="username"
+                value={formData.identifier}
                 onChange={handleInputChange}
                 className="pl-10 h-12"
-                placeholder="Enter your email"
+                placeholder="Enter your email or username"
               />
             </div>
           </div>
@@ -145,8 +154,8 @@ export default function Login() {
                 value={formData.password}
                 onChange={handleInputChange}
                 className={`pl-10 pr-12 h-12 ${
-                  formData.password && passwordValidation.strength === 'weak' 
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                  formData.password && passwordValidation.strength === 'weak'
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                     : formData.password && passwordValidation.strength === 'strong'
                     ? 'border-purple-300 focus:border-purple-500 focus:ring-purple-500'
                     : formData.password && passwordValidation.strength === 'medium'
@@ -193,8 +202,9 @@ export default function Login() {
           {/* Submit Button */}
           <Button
             type="submit"
+            size="lg"
             disabled={isLoading}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 mt-4"
+            className="group mt-4 h-12 w-full rounded-sm shadow-[0.25rem_0.25rem_0_0_#241a35] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[0.1rem_0.1rem_0_0_#241a35]"
           >
             {isLoading ? (
               <>
@@ -203,14 +213,14 @@ export default function Login() {
               </>
             ) : (
               <>
-                Sign In
+                Sign in <ArrowRight className="transition-transform group-hover:translate-x-1" />
               </>
             )}
           </Button>
         </SecureForm>
 
         {/* Sign Up Link */}
-        <div className="text-center">
+        <div className="mt-8 border-t border-dashed border-ink/20 pt-6 text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{" "}
             <Link href="/signup" className="font-medium text-purple-600 hover:text-purple-500">
@@ -219,23 +229,6 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Divider */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-gradient-to-br from-purple-50 via-white to-purple-100 text-gray-500">
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        {/* Social Login Placeholder */}
-        <div className="text-center">
-          <p className="text-xs text-gray-500">
-            Social login options coming soon
-          </p>
         </div>
       </div>
     </div>

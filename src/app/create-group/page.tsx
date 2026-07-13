@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { format } from "date-fns";
-import { Users, BookOpen, Clock, MapPin, FileText, Calendar as CalendarIcon, ArrowLeft, Plus, Loader2, CalendarDays, X, Hash } from "lucide-react";
+import { Users, BookOpen, Clock, MapPin, FileText, ArrowLeft, Plus, Loader2, CalendarDays, X, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,11 +13,12 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { sanitizeName, sanitizeInput } from "@/lib/inputSanitization";
+import { ensureProfile } from "@/lib/ensureProfile";
 
 export default function CreateGroup() {
   const { user } = useAuth();
   const router = useRouter();
-  
+
   const [formData, setFormData] = useState({
     name: "",
     subject: "",
@@ -104,6 +104,9 @@ export default function CreateGroup() {
         throw new Error("You must be logged in to create a group");
       }
 
+      // study_groups.creator_id references public.profiles(id), not auth.users(id).
+      await ensureProfile(user);
+
       // Format schedule from selected data
       const scheduleData = {
         days: selectedDays.map(day => format(day, "EEEE")),
@@ -165,10 +168,10 @@ export default function CreateGroup() {
 
       console.log("Group created successfully:", groupData);
       console.log("Creator automatically added as member");
-      
+
       // Redirect to dashboard on success
       router.push("/dashboard");
-      
+
     } catch (error: any) {
       setError(error.message || "Failed to create group");
     } finally {
@@ -179,7 +182,7 @@ export default function CreateGroup() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     let sanitizedValue = value;
-    
+
     // Apply appropriate sanitization based on field type
     if (name === 'name') {
       sanitizedValue = sanitizeName(value);
@@ -190,7 +193,7 @@ export default function CreateGroup() {
     } else if (name === 'maxMembers') {
       sanitizedValue = value; // Keep as is for number input
     }
-    
+
     setFormData({
       ...formData,
       [name]: sanitizedValue,
@@ -211,19 +214,19 @@ export default function CreateGroup() {
 
   const handleDaySelect = (day: Date | undefined) => {
     if (!day) return;
-    
+
     setSelectedDays(prev => {
-      const isSelected = prev.some(selectedDay => 
+      const isSelected = prev.some(selectedDay =>
         selectedDay.getDay() === day.getDay()
       );
-      
+
       if (isSelected) {
         return prev.filter(selectedDay => selectedDay.getDay() !== day.getDay());
       } else {
         return [...prev, day];
       }
     });
-    
+
     // Clear error when user starts selecting
     if (error) setError("");
   };
@@ -249,23 +252,32 @@ export default function CreateGroup() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
         {/* Header */}
-        <div className="mb-8">
+        <div className="animate-fade-up mb-10">
           <div className="flex items-center mb-6">
-            <Link
-              href="/"
-              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+            <button
+              type="button"
+              onClick={() => {
+                if (window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push('/dashboard');
+                }
+              }}
+              aria-label="Return to previous page"
+              className="flex items-center cursor-pointer font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-soft transition-colors hover:text-purple-700"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Link>
+              Back to previous page
+            </button>
           </div>
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Create Study Group
+          <div>
+            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-purple-700">New catalog entry · Draft</p>
+            <h1 className="mb-3 font-serif text-4xl font-medium tracking-tight text-ink sm:text-5xl">
+              Create a <em className="highlight-marker italic text-purple-700">study circle</em>.
             </h1>
-            <p className="text-gray-600">
+            <p className="max-w-2xl text-lg leading-relaxed text-ink-soft">
               Start a new study group and connect with fellow students
             </p>
           </div>
@@ -273,13 +285,13 @@ export default function CreateGroup() {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+          <div className="mb-6 border border-red-700/30 bg-red-100/50 px-4 py-3 text-red-900">
             {error}
           </div>
         )}
 
         {/* Create Group Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="form-sheet catalog-form space-y-7">
           {/* Group Name */}
           <div className="space-y-2">
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -378,19 +390,20 @@ export default function CreateGroup() {
                   onClick={handleAddTag}
                   disabled={!tagInput.trim() || tags.includes(tagInput.trim()) || tags.length >= 5}
                   variant="primary"
-                  className="px-4"
+                  className="h-12 max-h-12 min-w-20 rounded-sm px-4"
                 >
+                  <Plus className="h-3.5 w-3.5" />
                   Add
                 </Button>
               </div>
-              
+
               {/* Display Tags */}
               {tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {tags.map((tag) => (
                     <div
                       key={tag}
-                      className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm border border-purple-200"
+                      className="inline-flex items-center gap-1 border border-purple-700/35 bg-transparent px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-purple-700"
                     >
                       <span>{tag}</span>
                       <button
@@ -404,7 +417,7 @@ export default function CreateGroup() {
                   ))}
                 </div>
               )}
-              
+
               <p className="text-xs text-gray-500">
                 Tags help other students find your group more easily. Use relevant keywords like study topics, exam preparation, or difficulty level.
               </p>
@@ -427,7 +440,7 @@ export default function CreateGroup() {
                   name="frequency"
                   value={formData.frequency}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2 borderrounded-md border-purple-300 hover:border-purple-500 bg-white text-gray-900"
+                  className="h-12 w-full rounded-sm border border-ink/25 bg-paper pl-10 pr-4 text-ink"
                   required
                 >
                   <option value="">Select frequency</option>
@@ -454,7 +467,7 @@ export default function CreateGroup() {
                   name="platform"
                   value={formData.platform}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2 border rounded-md border-purple-300 hover:border-purple-500 bg-white text-gray-900"
+                  className="h-12 w-full rounded-sm border border-ink/25 bg-paper pl-10 pr-4 text-ink"
                   required
                 >
                   <option value="">Select platform</option>
@@ -471,8 +484,11 @@ export default function CreateGroup() {
           {/* Schedule Section */}
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Meeting Schedule</h3>
-              
+              <div className="mb-5 flex items-center gap-3 border-b border-ink/15 pb-3">
+                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-purple-700">Section 02</span>
+                <h3 className="font-serif text-xl font-medium text-ink">Meeting schedule</h3>
+              </div>
+
               {/* Days Selection */}
               <div className="space-y-3">
                 <label className="block text-sm font-medium text-gray-700">
@@ -483,7 +499,7 @@ export default function CreateGroup() {
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal border-purple-300 hover:border-purple-500",
+                        "h-12 w-full justify-start rounded-sm border-ink/25 bg-paper text-left font-normal hover:border-ink/25 hover:bg-[#fffcf5] hover:text-ink",
                         !selectedDays.length && "text-muted-foreground"
                       )}
                     >
@@ -494,7 +510,7 @@ export default function CreateGroup() {
                       }
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-white" align="start">
+                  <PopoverContent className="w-auto rounded-sm border-ink/20 bg-[#fffcf5] p-0 shadow-[4px_4px_0_rgba(36,26,53,.1)]" align="start">
                     <Calendar
                       mode="multiple"
                       selected={selectedDays}
@@ -555,9 +571,9 @@ export default function CreateGroup() {
 
               {/* Schedule Preview */}
               {selectedDays.length > 0 && startTime && endTime && (
-                <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                  <p className="text-sm font-medium text-purple-900">Schedule Preview:</p>
-                  <p className="text-sm text-purple-800">
+                <div className="mt-5 border border-dashed border-purple-700/40 bg-purple-100/35 p-4">
+                  <p className="mb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-purple-700">Schedule preview</p>
+                  <p className="font-serif text-lg text-ink">
                     {selectedDays.map(day => format(day, "EEEE")).join(", ")} from {startTime} to {endTime}
                   </p>
                 </div>
@@ -590,11 +606,12 @@ export default function CreateGroup() {
           </div>
 
           {/* Pro Tips */}
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
-            <h3 className="text-sm font-semibold text-purple-900 mb-3">
-              💡 Pro Tips for Creating a Great Study Group
+          <aside className="relative border border-amber-800/30 bg-marker/15 p-6">
+            <span aria-hidden className="absolute -top-2 right-8 h-4 w-16 rotate-2 bg-marker/60" />
+            <h3 className="mb-3 font-serif text-lg font-medium text-ink">
+              Notes for a strong study circle
             </h3>
-            <ul className="text-sm text-purple-800 space-y-2">
+            <ul className="space-y-2 text-sm leading-relaxed text-ink-soft">
               <li className="flex items-start">
                 <span className="mr-2">•</span>
                 <span>Be specific about topics and goals in your description</span>
@@ -616,13 +633,13 @@ export default function CreateGroup() {
                 <span><strong>You'll automatically be added as the first member</strong> when you create the group</span>
               </li>
             </ul>
-          </div>
+          </aside>
 
           {/* Submit Button */}
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3"
+            className="group h-12 w-full rounded-sm shadow-[0.25rem_0.25rem_0_0_#241a35] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[0.1rem_0.1rem_0_0_#241a35]"
           >
             {isLoading ? (
               <>
@@ -631,7 +648,7 @@ export default function CreateGroup() {
               </>
             ) : (
               <>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
                 Create Study Group
               </>
             )}
@@ -641,4 +658,3 @@ export default function CreateGroup() {
     </ProtectedRoute>
   );
 }
-

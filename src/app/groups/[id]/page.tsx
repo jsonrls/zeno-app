@@ -160,10 +160,10 @@ export default function GroupDetailPage() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading group details...</p>
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="py-12 text-center">
+            <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-ink/15 border-t-purple-700"></div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft">Opening the group record...</p>
           </div>
         </div>
       </ProtectedRoute>
@@ -173,14 +173,14 @@ export default function GroupDetailPage() {
   if (error || !group) {
     return (
       <ProtectedRoute>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="py-12 text-center">
+            <h2 className="mb-4 font-serif text-3xl font-medium text-ink">
               {error || "Group not found"}
             </h2>
-            <Button onClick={() => router.push("/dashboard")}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+            <Button onClick={() => window.history.length > 1 ? router.back() : router.push("/groups")}>
+              <ArrowLeft />
+              Back to groups
             </Button>
           </div>
         </div>
@@ -190,99 +190,109 @@ export default function GroupDetailPage() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
         {/* Header */}
-        <div className="mb-8">
-          <Button
-            onClick={() => router.push("/dashboard")}
-            className="mb-4 flex items-center bg-transparent hover:bg-transparent cursor-pointer shadow-none text-gray-600 hover:text-gray-900 transition-colors"
+        <div className="animate-fade-up mb-10">
+          <button
+            type="button"
+            onClick={() => window.history.length > 1 ? router.back() : router.push("/groups")}
+            className="mb-7 inline-flex cursor-pointer items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-soft transition-colors hover:text-purple-700"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
+            <ArrowLeft className="h-4 w-4" />
+            Back to previous page
+          </button>
 
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-            <div className="flex-1">
-              <Badge className="mb-3 bg-purple-100 text-purple-800 hover:bg-purple-200">
+          <div className="relative border border-ink/20 bg-[#fffcf5] p-5 shadow-[5px_5px_0_rgba(36,26,53,.10)] sm:p-8">
+            <span aria-hidden className="absolute -top-2 left-10 h-4 w-20 -rotate-2 bg-marker/60" />
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+              <Badge className="rounded-xs border border-purple-700/40 bg-transparent px-2 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-purple-700">
                 {group.subject}
               </Badge>
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-soft">Group record · {group.id.slice(0, 6)}</span>
+              </div>
+              <h1 className="mb-4 font-serif text-4xl font-medium tracking-tight text-ink sm:text-5xl">
                 {group.name}
               </h1>
-              <p className="text-gray-600 text-lg leading-relaxed">
+              <p className="max-w-3xl text-base leading-relaxed text-ink-soft sm:text-lg">
                 {group.description}
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex shrink-0 flex-wrap gap-3">
               {!isMember && !isFull && (
                 <Button
                   onClick={handleJoinGroup}
                   disabled={joining}
                   variant="primary"
+                  size="lg"
+                  className="h-10 px-5"
                 >
-                  <UserPlus className="h-4 w-4 mr-2" />
+                  <UserPlus />
                   {joining ? "Joining..." : "Join Group"}
                 </Button>
               )}
 
               {isCreator && (
-                <Button variant="outline" asChild>
+                <Button variant="primary" size="lg" className="h-10 px-5" asChild>
                   <Link href={`/groups/${group.id}/manage`}>
-                    <Settings className="h-4 w-4 mr-2" />
+                    <Settings />
                     Manage Group
                   </Link>
                 </Button>
               )}
             </div>
           </div>
+          </div>
 
           {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm">{error}</p>
+            <div className="mt-5 border border-red-700/30 bg-red-100/50 p-3">
+              <p className="text-sm text-red-900">{error}</p>
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6 lg:col-span-2 lg:flex">
             {/* Group Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Group Details</CardTitle>
+            <Card className="flex h-full flex-col rounded-sm border-ink/20 bg-[#fffcf5] shadow-[3px_3px_0_rgba(36,26,53,.08)] lg:flex-1">
+              <CardHeader className="border-b border-ink/15 pb-4">
+                <p className="mb-1 font-mono text-[9px] font-semibold uppercase tracking-[0.18em] text-purple-700">Reference details</p>
+                <CardTitle className="font-serif text-2xl font-medium">The essentials</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex items-center">
-                    <Clock className="h-5 w-5 text-gray-400 mr-3" />
+              <CardContent className="flex flex-1 flex-col p-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2">
+                  <div className="flex items-center border-b border-r-0 border-dashed border-ink/15 p-4 sm:border-r">
+                    <Clock className="mr-3 h-5 w-5 text-purple-700" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Frequency</p>
-                      <p className="text-sm text-gray-600">{group.frequency}</p>
+                      <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-ink-soft">Frequency</p>
+                      <p className="text-sm text-ink">{group.frequency}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center">
-                    <Calendar className="h-5 w-5 text-gray-400 mr-3" />
+                  <div className="flex items-center border-b border-dashed border-ink/15 p-4">
+                    <Calendar className="mr-3 h-5 w-5 text-purple-700" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Schedule</p>
-                      <p className="text-sm text-gray-600">{group.schedule}</p>
+                      <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-ink-soft">Schedule</p>
+                      <p className="text-sm text-ink">{group.schedule}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center">
-                    <MapPin className="h-5 w-5 text-gray-400 mr-3" />
+                  <div className="flex items-center border-b border-r-0 border-dashed border-ink/15 p-4 sm:border-b-0 sm:border-r">
+                    <MapPin className="mr-3 h-5 w-5 text-purple-700" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Platform</p>
-                      <p className="text-sm text-gray-600">{group.platform}</p>
+                      <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-ink-soft">Platform</p>
+                      <p className="text-sm text-ink">{group.platform}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center">
-                    <Users className="h-5 w-5 text-gray-400 mr-3" />
+                  <div className="flex items-center p-4">
+                    <Users className="mr-3 h-5 w-5 text-purple-700" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Members</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-ink-soft">Members</p>
+                      <p className="text-sm text-ink">
                         {group.group_members.length}/{group.max_members} members
                       </p>
                     </div>
@@ -290,16 +300,16 @@ export default function GroupDetailPage() {
                 </div>
 
                 {/* Creator Information */}
-                <div className="pt-4 border-t border-gray-200">
+                <div className="mt-auto border-t border-ink/15 p-4">
                   <div className="flex items-center">
-                    <div className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold mr-3">
+                    <div className="mr-3 grid h-9 w-9 place-items-center border border-purple-700/40 bg-purple-100/60 font-serif text-base font-semibold text-purple-700">
                       {group.creator?.name?.charAt(0) || 'C'}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-ink">
                         Created by {group.creator?.name || 'Unknown'}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-ink-soft">
                         {group.creator?.course} • {group.creator?.year_level}
                       </p>
                     </div>
@@ -312,38 +322,38 @@ export default function GroupDetailPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Members List */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Users className="h-5 w-5 mr-2" />
+            <Card className="rounded-sm border-ink/20 bg-[#fffcf5] shadow-[3px_3px_0_rgba(36,26,53,.08)]">
+              <CardHeader className="border-b border-ink/15 pb-4">
+                <CardTitle className="flex items-center font-serif text-xl font-medium">
+                  <Users className="mr-2 h-4 w-4 text-purple-700" />
                   Members ({group.group_members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-0">
                   {group.group_members.map((member) => (
-                    <div key={member.id} className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                    <div key={member.id} className="flex items-center space-x-3 border-b border-dashed border-ink/15 py-3 last:border-0">
+                      <div className="grid h-8 w-8 shrink-0 place-items-center border border-purple-700/35 bg-purple-100/60 font-serif text-sm font-semibold text-purple-700">
                         {member.profiles?.name?.charAt(0) || 'U'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="truncate text-sm font-medium text-ink">
                           {member.profiles?.name || 'Unknown'}
                           {member.user_id === group.creator_id && (
-                            <Badge variant="outline" className="ml-2 text-xs">
+                            <Badge variant="outline" className="ml-2 rounded-xs font-mono text-[8px] uppercase tracking-[0.08em]">
                               Creator
                             </Badge>
                           )}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">
+                        <p className="truncate text-xs text-ink-soft">
                           {member.profiles?.course} • {member.profiles?.year_level}
                         </p>
                       </div>
                     </div>
                   ))}
-                  
+
                   {group.group_members.length === 0 && (
-                    <p className="text-sm text-gray-500 text-center py-4">
+                    <p className="py-4 text-center text-sm text-ink-soft">
                       No members yet
                     </p>
                   )}
@@ -352,25 +362,25 @@ export default function GroupDetailPage() {
             </Card>
 
             {/* Progress */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Group Progress</CardTitle>
+            <Card className="rounded-sm border-ink/20 bg-[#fffcf5] shadow-[3px_3px_0_rgba(36,26,53,.08)]">
+              <CardHeader className="border-b border-ink/15 pb-4">
+                <CardTitle className="font-serif text-xl font-medium">Capacity</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between font-mono text-[10px] uppercase tracking-[0.12em] text-ink-soft">
                     <span>Members</span>
-                    <span>{group.group_members.length}/{group.max_members}</span>
+                    <span className="text-ink">{group.group_members.length}/{group.max_members}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="h-2 w-full bg-ink/10">
                     <div
-                      className="bg-purple-600 h-3 rounded-full transition-all duration-300"
+                      className="h-2 bg-purple-700 transition-all duration-300"
                       style={{
                         width: `${(group.group_members.length / group.max_members) * 100}%`
                       }}
                     ></div>
                   </div>
-                  <p className="text-xs text-gray-500 text-center">
+                  <p className="text-center font-mono text-[10px] uppercase tracking-[0.12em] text-ink-soft">
                     {isFull ? "Group is full!" : `${group.max_members - group.group_members.length} spots remaining`}
                   </p>
                 </div>

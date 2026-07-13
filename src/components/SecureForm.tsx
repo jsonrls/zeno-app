@@ -140,22 +140,22 @@ export default function SecureForm({
 
       {/* CSRF Token Loading Indicator (production-friendly) */}
       {!csrfReady && !isBlocked && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+        <div className="mb-4 p-3 bg-paper-deep border border-ink/20 rounded-[3px]">
           <div className="flex items-center">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-            <p className="text-blue-800 text-sm">Initializing security features...</p>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-700 mr-2"></div>
+            <p className="text-ink-soft text-sm">Initializing security features...</p>
           </div>
         </div>
       )}
 
       {/* Rate Limit Warning */}
       {isBlocked && remainingTime > 0 && (
-        <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-md">
+        <div className="mb-4 p-4 bg-amber-100/60 border border-amber-700/40 rounded-[3px]">
           <div className="flex items-center">
-            <Clock className="h-5 w-5 text-orange-500 mr-2" />
+            <Clock className="h-5 w-5 text-amber-700 mr-2" />
             <div>
-              <p className="text-orange-800 font-medium">Rate limit exceeded</p>
-              <p className="text-orange-700 text-sm">
+              <p className="text-amber-900 font-medium">Rate limit exceeded</p>
+              <p className="text-amber-800 text-sm">
                 Please wait {remainingTime} seconds before trying again.
               </p>
             </div>
@@ -165,10 +165,10 @@ export default function SecureForm({
 
       {/* Error Messages */}
       {showError && !isBlocked && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+        <div className="mb-4 p-4 bg-red-100/50 border border-red-700/30 rounded-[3px]">
           <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-            <p className="text-red-800">{showError}</p>
+            <AlertTriangle className="h-5 w-5 text-red-700 mr-2" />
+            <p className="text-red-900">{showError}</p>
           </div>
         </div>
       )}

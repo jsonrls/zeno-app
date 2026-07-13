@@ -37,8 +37,8 @@ export default function MaintenanceToggle() {
         size="sm"
         className={`flex items-center space-x-2 transition-all duration-200 ${
           isMaintenanceMode 
-            ? 'bg-red-600 hover:bg-red-700 text-white' 
-            : 'border-orange-300 text-orange-600 hover:bg-orange-50'
+            ? 'bg-red-700 hover:bg-red-800 text-white' 
+            : 'border-amber-700/50 text-amber-700 hover:border-amber-700 hover:bg-amber-100/60 hover:text-amber-800'
         }`}
       >
         <Wrench className="w-4 h-4" />
@@ -49,16 +49,16 @@ export default function MaintenanceToggle() {
 
       {/* Confirmation Dialog */}
       {isConfirming && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
+        <div className="absolute right-0 mt-2 w-80 bg-paper rounded-[3px] shadow-[4px_4px_0_0_rgba(36,26,53,0.15)] border border-ink/20 p-4 z-50">
           <div className="flex items-start space-x-3">
             <div className="flex-shrink-0">
-              <AlertTriangle className="w-6 h-6 text-orange-500" />
+              <AlertTriangle className="w-6 h-6 text-amber-700" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="font-serif text-lg font-medium text-ink mb-2">
                 Enable Maintenance Mode?
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-ink-soft mb-4">
                 This will redirect all users to the maintenance page. Only admins will be able to access the site.
               </p>
               <div className="flex space-x-3">

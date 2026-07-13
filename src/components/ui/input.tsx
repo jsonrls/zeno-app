@@ -8,10 +8,9 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       type={type}
       data-slot="input"
       className={cn(
-        "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input border-1 flex h-9 w-full focus:border-purple-600 min-w-0 rounded-md bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-1 file:border-purple-600 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "focus-visible:border-1",
+        "file:text-ink placeholder:text-ink-soft/60 selection:bg-purple-700 selection:text-white border-1 flex h-9 w-full min-w-0 rounded-[3px] border-ink/25 bg-[#fffcf5] px-3 py-1 text-base text-ink shadow-xs transition-[color,box-shadow,border-color] outline-none file:inline-flex file:h-7 file:border-1 file:border-purple-700 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        "hover:border-ink/45 focus:border-purple-700 focus-visible:border-purple-700 focus-visible:ring-[3px] focus-visible:ring-purple-700/15",
         "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
-        "border-purple-300 hover:border-purple-500",	
         className
       )}
       {...props}

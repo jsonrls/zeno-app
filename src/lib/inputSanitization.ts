@@ -80,8 +80,19 @@ export function sanitizeName(name: string): string {
   return sanitizeInput(name, {
     allowHTML: false,
     maxLength: 100,
-    trim: true
+    // Preserve trailing spaces while the user is typing. Submission handlers
+    // normalize the final value with trim().
+    trim: false
   });
+}
+
+export function sanitizeUsername(username: string): string {
+  if (!username || typeof username !== 'string') return '';
+
+  return username
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, '')
+    .slice(0, 24);
 }
 
 /**

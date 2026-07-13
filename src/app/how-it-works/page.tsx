@@ -1,360 +1,269 @@
-"use client";
-
 import Link from "next/link";
-import { ArrowRight, Users, Search, Plus, MessageCircle, BookOpen, Target, Clock, Shield, CheckCircle } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  CalendarDays,
+  Check,
+  ChevronDown,
+  Clock3,
+  Compass,
+  MapPin,
+  MessageCircle,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const steps = [
+  {
+    number: "01",
+    kicker: "Search the catalog",
+    title: "Find a group that fits your actual week.",
+    description:
+      "Browse by subject, then check the meeting rhythm, location, and open seats. The right group should fit your calendar—not fight it.",
+    note: "Tip: schedule fit beats a perfect subject tag.",
+    icon: Search,
+  },
+  {
+    number: "02",
+    kicker: "Claim your seat",
+    title: "Join in one click—or start the room yourself.",
+    description:
+      "Found your people? Join the roster. Nothing quite right? Create a group, set the expectations, and let matching classmates find you.",
+    note: "You choose the size, cadence, and platform.",
+    icon: Users,
+  },
+  {
+    number: "03",
+    kicker: "Show up together",
+    title: "Turn a plan into a dependable study habit.",
+    description:
+      "Meet where your group agreed—online or in person. Bring a goal, compare approaches, and leave knowing what each person will tackle next.",
+    note: "Small, regular sessions are easier to sustain.",
+    icon: BookOpen,
+  },
+];
+
+const tools = [
+  {
+    icon: Compass,
+    label: "Precise discovery",
+    copy: "Filter by subject, frequency, meeting style, and platform.",
+  },
+  {
+    icon: CalendarDays,
+    label: "Clear schedules",
+    copy: "See the meeting plan before you commit your time.",
+  },
+  {
+    icon: MessageCircle,
+    label: "Your choice of room",
+    copy: "Use Discord, Meet, Zoom, or a real table in the library.",
+  },
+  {
+    icon: ShieldCheck,
+    label: "You stay in control",
+    copy: "Manage your groups and leave when the fit is no longer right.",
+  },
+];
+
+const principles = [
+  ["Explain it aloud", "Teaching a concept exposes the exact point where your understanding gets fuzzy."],
+  ["Compare methods", "A classmate’s route to the same answer can unlock a problem you have been circling."],
+  ["Create accountability", "A recurring session gives your study plan a place and a time—not just good intentions."],
+  ["Share the load", "Divide review topics, pool useful resources, and spend the session on the hardest questions."],
+];
+
+const faqs = [
+  ["Is Zeno free to use?", "Yes. Browsing, joining, and creating study groups are free for students."],
+  ["How do I choose the right group?", "Start with your subject, then prioritize schedule, location, and group size. Those practical details usually determine whether a group becomes a real habit."],
+  ["Can I create or join more than one group?", "Yes. You can organize different groups around different subjects, courses, or study goals."],
+  ["Where do study sessions happen?", "Wherever the group agrees: Discord, Zoom, Google Meet, another online platform, or an in-person location."],
+  ["What if a group is not working for me?", "You can leave and look for a better fit. Study needs change, and your group roster can change with them."],
+];
+
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-center gap-3 font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-ink-soft">
+      <span className="h-px w-9 bg-purple-700/60" aria-hidden />
+      {children}
+    </p>
+  );
+}
 
 export default function HowItWorks() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-purple-600 to-indigo-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold mb-4">
-              How Zeno Works
+    <div className="bg-paper text-ink">
+      <section className="relative overflow-hidden border-b border-ink/15 px-5 pb-14 pt-11 sm:px-6 sm:py-20 lg:py-24">
+        <div className="bg-grid-paper absolute inset-0 opacity-70 mask-[radial-gradient(ellipse_at_top_right,black_15%,transparent_72%)]" aria-hidden />
+        <div className="relative mx-auto grid max-w-6xl gap-11 sm:gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div>
+            <div className="animate-fade-up"><Eyebrow>Zeno field guide · No. 01</Eyebrow></div>
+            <h1 className="animate-fade-up mt-5 max-w-3xl font-serif text-[2.8rem] font-medium leading-[1.01] tracking-[-0.04em] [animation-delay:80ms] min-[390px]:text-[3.15rem] sm:mt-6 sm:text-6xl lg:text-7xl">
+              From “I should study” to <em className="highlight-marker italic text-purple-700">see you at seven.</em>
             </h1>
-            <p className="text-xl text-purple-100 max-w-3xl mx-auto">
-              Discover how easy it is to find study partners, join groups, and achieve academic success together
+            <p className="animate-fade-up mt-6 max-w-xl text-[1.05rem] leading-relaxed text-ink-soft [animation-delay:160ms] sm:mt-7 sm:text-lg">
+              Zeno turns the awkward work of finding study partners into three clear moves: discover a fit, join the roster, and build a rhythm together.
             </p>
+            <div className="animate-fade-up mt-8 grid grid-cols-2 gap-3 [animation-delay:240ms] sm:mt-9 sm:flex sm:gap-4">
+              <Button size="lg" asChild className="group h-12 w-full rounded-sm px-4 shadow-[4px_4px_0_#241a35] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0_#241a35] sm:w-auto sm:px-7">
+                <Link href="/groups">Browse the catalog <ArrowRight className="transition-transform group-hover:translate-x-1" /></Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild className="h-12 w-full px-4 sm:w-auto sm:px-7">
+                <Link href="/create-group">Start a group</Link>
+              </Button>
+            </div>
+          </div>
+
+          <div className="animate-fade-up relative mx-auto w-full max-w-md px-1 [animation-delay:180ms] sm:px-0">
+            <div className="absolute -left-2 top-12 h-20 w-20 -rotate-6 border border-dashed border-purple-700/35 sm:-left-5 sm:h-24 sm:w-24" aria-hidden />
+            <article className="relative border border-ink/20 bg-[#fffcf5] p-5 shadow-[7px_8px_0_rgba(36,26,53,0.09)] transition-transform duration-300 sm:rotate-1 sm:p-6 sm:shadow-[10px_12px_0_rgba(36,26,53,0.09)] sm:hover:rotate-0">
+              <span className="absolute -top-3 left-1/2 h-6 w-24 -translate-x-1/2 -rotate-2 bg-marker/55" aria-hidden />
+              <div className="flex items-start justify-between border-b border-ink/15 pb-4">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-purple-700">Sample match</p>
+                  <h2 className="mt-2 max-w-48 font-serif text-xl font-medium leading-tight sm:max-w-none sm:text-2xl">Calculus II Workroom</h2>
+                </div>
+                <span className="border border-purple-700/50 px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-purple-700">Open</span>
+              </div>
+              <dl className="py-3">
+                {[
+                  [CalendarDays, "Meets", "Tue & Thu · 7:00 PM"],
+                  [MapPin, "Where", "Library · Room 204"],
+                  [Users, "Roster", "5 of 8 students"],
+                  [Clock3, "Rhythm", "Twice a week"],
+                ].map(([Icon, key, value]) => {
+                  const ItemIcon = Icon as typeof CalendarDays;
+                  return (
+                    <div key={key as string} className="grid grid-cols-[18px_58px_1fr] items-center border-b border-dashed border-ink/15 py-3 text-xs min-[390px]:grid-cols-[20px_68px_1fr] min-[390px]:text-sm sm:grid-cols-[20px_72px_1fr]">
+                      <ItemIcon className="h-4 w-4 text-purple-700" />
+                      <dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-ink-soft">{key as string}</dt>
+                      <dd className="text-right text-ink">{value as string}</dd>
+                    </div>
+                  );
+                })}
+              </dl>
+              <p className="mt-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-soft">
+                <Sparkles className="h-3.5 w-3.5 text-amber-700" /> Looks like a strong fit
+              </p>
+            </article>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Main Steps Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Getting Started is Simple
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Follow these easy steps to start your collaborative learning journey
-          </p>
-        </div>
-
-        {/* Steps Grid */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          {/* Step 1 */}
-          <div className="text-center group">
-            <div className="bg-purple-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-purple-200 transition-colors">
-              <Search className="h-10 w-10 text-purple-600" />
-            </div>
-            <div className="bg-purple-600 text-white w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-4 text-sm font-bold">
-              1
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              Browse & Discover
-            </h3>
-            <p className="text-gray-600 leading-relaxed">
-              Search through hundreds of study groups by subject, schedule, or learning style. Filter by your preferences to find the perfect match.
-            </p>
-          </div>
-
-          {/* Step 2 */}
-          <div className="text-center group">
-            <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-green-200 transition-colors">
-              <Users className="h-10 w-10 text-green-600" />
-            </div>
-            <div className="bg-green-600 text-white w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-4 text-sm font-bold">
-              2
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              Join or Create
-            </h3>
-            <p className="text-gray-600 leading-relaxed">
-              Join existing groups that match your needs or create your own group. Set your schedule, platform, and learning objectives.
-            </p>
-          </div>
-
-          {/* Step 3 */}
-          <div className="text-center group">
-            <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-200 transition-colors">
-              <Target className="h-10 w-10 text-blue-600" />
-            </div>
-            <div className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-4 text-sm font-bold">
-              3
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              Study & Succeed
-            </h3>
-            <p className="text-gray-600 leading-relaxed">
-              Collaborate with your group members, share resources, and achieve better results together through peer learning.
-            </p>
-          </div>
-        </div>
-
-        {/* CTA Button */}
-        <div className="text-center">
-          <Button size="lg" variant="primary" asChild>
-            <Link href="/signup">
-              Get Started Now
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      {/* Features Section */}
-      <div className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Powerful Features for Better Learning
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Everything you need to create meaningful study connections and improve your academic performance
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition-shadow">
-              <div className="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                <Search className="h-6 w-6 text-purple-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Smart Matching
-              </h3>
-              <p className="text-gray-600">
-                Advanced filters help you find groups by subject, schedule, platform, and learning style preferences.
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition-shadow">
-              <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                <Plus className="h-6 w-6 text-green-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Easy Group Creation
-              </h3>
-              <p className="text-gray-600">
-                Create your own study group in minutes with customizable settings, schedules, and member limits.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition-shadow">
-              <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                <Clock className="h-6 w-6 text-blue-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Flexible Scheduling
-              </h3>
-              <p className="text-gray-600">
-                Set meeting times that work for everyone with multiple schedule options and frequency settings.
-              </p>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition-shadow">
-              <div className="bg-orange-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                <MessageCircle className="h-6 w-6 text-orange-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Multiple Platforms
-              </h3>
-              <p className="text-gray-600">
-                Study online via Discord, Zoom, Google Meet, or meet in person - choose what works best for your group.
-              </p>
-            </div>
-
-            {/* Feature 5 */}
-            <div className="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition-shadow">
-              <div className="bg-indigo-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                <BookOpen className="h-6 w-6 text-indigo-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Subject Variety
-              </h3>
-              <p className="text-gray-600">
-                Find groups for any subject from Computer Science and Mathematics to Business and Engineering.
-              </p>
-            </div>
-
-            {/* Feature 6 */}
-            <div className="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition-shadow">
-              <div className="bg-red-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                <Shield className="h-6 w-6 text-red-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Safe & Secure
-              </h3>
-              <p className="text-gray-600">
-                Join a trusted community of verified students with secure account management and privacy protection.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Benefits Section */}
-      <div className="bg-gray-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <section className="px-5 py-16 sm:px-6 sm:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 grid gap-5 sm:mb-14 sm:gap-6 md:grid-cols-2 md:items-end">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                Why Study Groups Work
-              </h2>
-              <p className="text-lg text-gray-600 mb-8">
-                Research shows that collaborative learning significantly improves academic performance, retention, and understanding of complex topics.
-              </p>
-              
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Improved Understanding</h3>
-                    <p className="text-gray-600">Explaining concepts to others reinforces your own learning and reveals knowledge gaps.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Better Motivation</h3>
-                    <p className="text-gray-600">Regular group meetings create accountability and keep you committed to your studies.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Diverse Perspectives</h3>
-                    <p className="text-gray-600">Learn from different approaches and problem-solving methods from your peers.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Stress Reduction</h3>
-                    <p className="text-gray-600">Share the workload and reduce academic stress through mutual support and collaboration.</p>
-                  </div>
-                </div>
-              </div>
+              <Eyebrow>§ 01 · The route</Eyebrow>
+              <h2 className="mt-4 font-serif text-[2.35rem] font-medium leading-[1.05] sm:text-5xl">Three moves. One better habit.</h2>
             </div>
-            
-            <div className="bg-white rounded-lg shadow-lg p-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-                Quick Stats
-              </h3>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600 mb-2">85%</div>
-                  <div className="text-sm text-gray-600">Higher retention rate with study groups</div>
+            <p className="max-w-md text-base leading-relaxed text-ink-soft sm:text-lg md:justify-self-end">No feeds to maintain and no complicated setup. Zeno helps you get from search to study session with as little friction as possible.</p>
+          </div>
+
+          <ol className="relative border-t border-ink/20 before:absolute before:bottom-8 before:left-[1.1rem] before:top-8 before:w-px before:bg-purple-700/20 sm:before:hidden">
+            {steps.map((step, index) => (
+              <li key={step.number} className="group relative grid gap-4 border-b border-ink/20 py-8 pl-14 sm:gap-6 sm:py-10 sm:pl-0 md:grid-cols-[90px_1fr_1fr] md:items-start md:py-12">
+                <div className="absolute left-0 top-8 flex h-9 w-9 items-center justify-center border border-purple-700/35 bg-paper sm:static sm:h-auto sm:w-auto sm:justify-start sm:border-0 sm:bg-transparent md:block">
+                  <span className="font-mono text-[10px] tracking-[0.14em] text-purple-700 sm:text-xs sm:tracking-[0.2em]">/{step.number}</span>
+                  <step.icon className="hidden h-8 w-8 text-ink sm:ml-4 sm:block md:ml-0 md:mt-7 md:h-10 md:w-10" strokeWidth={1.35} />
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-2">2.3x</div>
-                  <div className="text-sm text-gray-600">Faster problem-solving in groups</div>
+                <div>
+                  <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">{step.kicker}</p>
+                  <h3 className="max-w-lg font-serif text-[1.65rem] font-medium leading-[1.08] transition-colors group-hover:text-purple-700 sm:text-3xl">{step.title}</h3>
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">92%</div>
-                  <div className="text-sm text-gray-600">Students report improved grades</div>
+                <div>
+                  <p className="leading-relaxed text-ink-soft">{step.description}</p>
+                  <p className="mt-5 inline-block -rotate-1 bg-marker/35 px-2 py-1 font-mono text-[10px] tracking-wide text-ink">{step.note}</p>
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-orange-600 mb-2">78%</div>
-                  <div className="text-sm text-gray-600">Less academic stress reported</div>
-                </div>
-              </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="border-y border-ink/15 bg-paper-deep px-5 py-16 sm:px-6 sm:py-24">
+        <div className="mx-auto max-w-6xl">
+          <Eyebrow>§ 02 · Inside the toolkit</Eyebrow>
+          <div className="mt-5 grid gap-10 lg:grid-cols-[0.75fr_1.25fr]">
+            <div>
+              <h2 className="font-serif text-[2.35rem] font-medium leading-[1.05] sm:text-5xl">Just enough structure to get everyone in the room.</h2>
+              <p className="mt-6 max-w-md leading-relaxed text-ink-soft">Zeno handles discovery and coordination. Your group keeps ownership of how, where, and what you study.</p>
+            </div>
+            <div className="grid grid-cols-2 border-l border-t border-ink/20">
+              {tools.map((tool, index) => (
+                <article key={tool.label} className="group min-h-48 border-b border-r border-ink/20 bg-paper p-4 transition-colors hover:bg-[#fffcf5] min-[390px]:p-5 sm:min-h-52 sm:p-7">
+                  <div className="flex items-start justify-between">
+                    <tool.icon className="h-7 w-7 text-purple-700 transition-transform group-hover:-rotate-6" strokeWidth={1.5} />
+                    <span className="font-mono text-[9px] tracking-[0.18em] text-ink-soft/60">0{index + 1}</span>
+                  </div>
+                  <h3 className="mt-6 font-serif text-lg font-medium leading-tight sm:mt-8 sm:text-xl">{tool.label}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-soft">{tool.copy}</p>
+                </article>
+              ))}
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* FAQ Section */}
-      <div className="bg-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-lg text-gray-600">
-              Got questions? We've got answers.
-            </p>
+      <section className="px-5 py-16 sm:px-6 sm:py-24">
+        <div className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-2 lg:gap-24">
+          <div>
+            <Eyebrow>§ 03 · Why the group helps</Eyebrow>
+            <h2 className="mt-4 font-serif text-[2.35rem] font-medium leading-[1.05] sm:text-5xl">Learning gets stronger when it leaves your notebook.</h2>
+            <p className="mt-6 text-lg leading-relaxed text-ink-soft">A useful study group is not four people silently doing homework. It is a place to retrieve, explain, challenge, and refine what you know.</p>
           </div>
+          <ul className="space-y-0 border-t border-ink/20">
+            {principles.map(([title, copy]) => (
+              <li key={title} className="grid grid-cols-[28px_1fr] gap-4 border-b border-ink/20 py-6">
+                <Check className="mt-1 h-4 w-4 text-purple-700" />
+                <div><h3 className="font-serif text-xl font-medium">{title}</h3><p className="mt-2 text-sm leading-relaxed text-ink-soft">{copy}</p></div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
-          <div className="space-y-8">
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Is Zeno free to use?
-              </h3>
-              <p className="text-gray-600">
-                Yes! Zeno is completely free for all students. Create groups, join discussions, and access all features at no cost.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                How do I find the right study group?
-              </h3>
-              <p className="text-gray-600">
-                Use our smart filters to search by subject, meeting frequency, platform preference, and schedule. You can also browse by specific topics or course names.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Can I create multiple study groups?
-              </h3>
-              <p className="text-gray-600">
-                Absolutely! You can create as many groups as you need for different subjects or purposes. You can also join multiple groups as a member.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                What if my group isn't working out?
-              </h3>
-              <p className="text-gray-600">
-                You can leave any group at any time. No questions asked! Simply visit your "My Groups" page and click leave. You're always free to find or create a better fit.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                How do study sessions work?
-              </h3>
-              <p className="text-gray-600">
-                Groups organize their own study sessions using their preferred platform (Discord, Zoom, Google Meet, etc.) or meet in person. Zeno helps you connect - the learning happens in your chosen environment.
-              </p>
-            </div>
+      <section className="border-t border-ink/15 px-5 py-16 sm:px-6 sm:py-24">
+        <div className="mx-auto max-w-4xl">
+          <div className="text-center">
+            <div className="justify-center"><Eyebrow>§ 04 · Field notes</Eyebrow></div>
+            <h2 className="mt-4 font-serif text-[2.35rem] font-medium leading-[1.05] sm:text-5xl">Questions before you join?</h2>
+          </div>
+          <div className="mt-12 border-t border-ink/20">
+            {faqs.map(([question, answer], index) => (
+              <details key={question} className="group border-b border-ink/20">
+                <summary className="flex min-h-16 cursor-pointer list-none items-center gap-3 py-5 text-left sm:gap-5 sm:py-6 [&::-webkit-details-marker]:hidden">
+                  <span className="font-mono text-[10px] tracking-[0.16em] text-purple-700">0{index + 1}</span>
+                  <h3 className="flex-1 font-serif text-lg font-medium leading-tight sm:text-2xl">{question}</h3>
+                  <ChevronDown className="h-5 w-5 text-ink-soft transition-transform group-open:rotate-180" />
+                </summary>
+                <p className="max-w-2xl pb-6 pl-8 text-sm leading-relaxed text-ink-soft sm:pb-7 sm:pl-12 sm:text-base">{answer}</p>
+              </details>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Final CTA Section */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Ready to Transform Your Study Experience?
-          </h2>
-          <p className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of students who are already studying smarter, not harder, with Zeno study groups.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button 
-              size="lg" 
-              variant="primary" 
-              asChild
-            >
-              <Link href="/groups">
-                Browse Study Groups
-              </Link>
+      <section className="relative overflow-hidden bg-ink px-5 pb-24 pt-16 text-paper sm:px-6 sm:py-24">
+        <div className="bg-grid-paper absolute inset-0 opacity-[0.08]" aria-hidden />
+        <div className="relative mx-auto grid max-w-6xl gap-10 md:grid-cols-[1fr_auto] md:items-end">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-purple-300">Your next session starts here</p>
+            <h2 className="mt-5 max-w-3xl font-serif text-[2.45rem] font-medium leading-[1.05] text-paper! sm:text-6xl">Find the people who make the hard chapter feel possible.</h2>
+          </div>
+          <div className="grid grid-cols-1 gap-3 min-[390px]:grid-cols-2 sm:flex sm:flex-row md:flex-col">
+            <Button size="lg" asChild className="group h-12 w-full bg-paper px-5 text-ink shadow-[4px_4px_0_#7c3aed] hover:bg-white sm:w-auto sm:px-7">
+              <Link href="/groups">Browse groups <ArrowRight className="transition-transform group-hover:translate-x-1" /></Link>
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="bg-white text-purple-600 hover:bg-gray-50 hover:text-purple-700"  
-              asChild
-            >
-              <Link href="/signup">
-                Create Free Account
-              </Link>
+            <Button size="lg" variant="outline" asChild className="h-12 w-full border-paper/50 px-5 text-ink hover:bg-paper hover:text-ink sm:w-auto sm:px-7">
+              <Link href="/signup">Create free account</Link>
             </Button>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

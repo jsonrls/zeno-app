@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, Mail, Lock, GraduationCap, Calendar, Eye, EyeOff, Loader2, UserPlus, CheckCircle, Check, X, AlertCircle } from "lucide-react";
@@ -12,13 +12,15 @@ import { RATE_LIMITS } from "@/lib/security";
 import { useAuth } from "@/lib/auth";
 import { validatePassword } from "@/lib/passwordValidation";
 import { useEmailUniqueness } from "@/hooks/useEmailUniqueness";
-import { sanitizeEmail, sanitizePassword, sanitizeName, sanitizeCourse, sanitizeYearLevel } from "@/lib/inputSanitization";
+import { sanitizeEmail, sanitizePassword, sanitizeName, sanitizeUsername, sanitizeCourse, sanitizeYearLevel } from "@/lib/inputSanitization";
+import { supabase } from "@/lib/supabase";
 
 export default function SignUp() {
   const router = useRouter();
-  const { signUp } = useAuth();
+  const { signUp, user, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -30,6 +32,7 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
 
   // Password validation
   const passwordValidation = useMemo(() => validatePassword(formData.password), [formData.password]);
@@ -61,19 +64,28 @@ export default function SignUp() {
 
   const yearLevels = [
     "1st Year",
-    "2nd Year", 
+    "2nd Year",
     "3rd Year",
     "4th Year",
     "Graduate",
     "PhD",
   ];
 
+  // Registration is for signed-out visitors only. Hold the form until the
+  // current session is known so an authenticated user never sees it flash.
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, router, user]);
+
   const handleSecureSubmit = async (formData: FormData, csrfToken: string) => {
     setError("");
     setLoading(true);
 
     const data = {
-      name: sanitizeName(formData.get('name') as string),
+      name: sanitizeName(formData.get('name') as string).trim().replace(/\s+/g, ' '),
+      username: sanitizeUsername(formData.get('username') as string),
       email: sanitizeEmail(formData.get('email') as string),
       password: sanitizePassword(formData.get('password') as string),
       confirmPassword: sanitizePassword(formData.get('confirmPassword') as string),
@@ -98,6 +110,31 @@ export default function SignUp() {
       setError("Please enter your full name");
       setLoading(false);
       throw new Error("Please enter your full name");
+    }
+
+    if (!/^[a-z0-9_]{3,24}$/.test(data.username)) {
+      setError("Username must be 3–24 characters using letters, numbers, or underscores");
+      setLoading(false);
+      throw new Error("Invalid username");
+    }
+
+    const { data: existingUsername, error: usernameCheckError } = await supabase
+      .from('profiles')
+      .select('id')
+      .ilike('username', data.username)
+      .limit(1);
+
+    if (usernameCheckError) {
+      setError("We couldn't verify that username. Please try again.");
+      setLoading(false);
+      throw usernameCheckError;
+    }
+
+    if (existingUsername?.length) {
+      setUsernameStatus("taken");
+      setError("That username is already taken");
+      setLoading(false);
+      throw new Error("Username already taken");
     }
 
     // Check email uniqueness
@@ -132,6 +169,7 @@ export default function SignUp() {
         data.password,
         {
           name: data.name,
+          username: data.username,
           course: data.course,
           yearLevel: data.yearLevel,
         }
@@ -157,7 +195,7 @@ export default function SignUp() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     let sanitizedValue = value;
-    
+
     // Apply appropriate sanitization based on field type
     if (name === 'email') {
       sanitizedValue = sanitizeEmail(value);
@@ -167,20 +205,23 @@ export default function SignUp() {
       sanitizedValue = sanitizePassword(value);
     } else if (name === 'name') {
       sanitizedValue = sanitizeName(value);
+    } else if (name === 'username') {
+      sanitizedValue = sanitizeUsername(value);
+      setUsernameStatus("idle");
     } else if (name === 'course') {
       sanitizedValue = sanitizeCourse(value);
     } else if (name === 'yearLevel') {
       sanitizedValue = sanitizeYearLevel(value);
     }
-    
+
     setFormData({
       ...formData,
       [name]: sanitizedValue,
     });
-    
+
     // Clear error when user starts typing
     if (error) setError("");
-    
+
     // Trigger email uniqueness check when email changes
     if (name === 'email') {
       if (sanitizedValue.trim()) {
@@ -191,10 +232,39 @@ export default function SignUp() {
     }
   };
 
+  const checkUsername = async () => {
+    const username = sanitizeUsername(formData.username);
+    if (!/^[a-z0-9_]{3,24}$/.test(username)) {
+      setUsernameStatus("idle");
+      return;
+    }
+
+    setUsernameStatus("checking");
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .ilike('username', username)
+      .limit(1);
+    setUsernameStatus(!error && data?.length === 0 ? "available" : "taken");
+  };
+
+  if (authLoading || user) {
+    return (
+      <div className="auth-page flex min-h-screen items-center justify-center px-4 py-12" aria-live="polite">
+        <div className="form-sheet w-full max-w-sm text-center">
+          <Loader2 className="mx-auto h-5 w-5 animate-spin text-purple-700" aria-hidden="true" />
+          <p className="mt-3 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft">
+            {user ? "Opening your dashboard" : "Checking your session"}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 py-12 px-4 flex items-center justify-center">
-        <div className="max-w-md mx-auto text-center">
+      <div className="auth-page flex min-h-screen items-center justify-center px-4 py-12">
+        <div className="form-sheet max-w-md text-center">
           <div className="bg-green-100 text-green-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10" />
           </div>
@@ -219,36 +289,36 @@ export default function SignUp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-8">
-        {/* Header */}
-        <div className="text-center mt-4">
-          <div className="flex justify-center mb-6">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center space-x-3 group">
-                <div className="bg-purple-600 text-white w-16 h-16 rounded-xl flex items-center justify-center transition-transform shadow-md">
-                  <span className="font-bold text-4xl">Z</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-2xl text-gray-900">Zeno</span>
-                  <span className="text-xs text-gray-500 -mt-1">Study Groups</span>
-                </div>
-              </Link>
-            </div>
+    <div className="auth-page min-h-screen px-4 py-12 sm:py-16">
+      <div className="relative mx-auto grid w-full max-w-6xl overflow-hidden border border-ink/20 bg-[#fffcf5] shadow-[6px_6px_0_rgba(36,26,53,0.12)] lg:grid-cols-[0.9fr_1.1fr]">
+        <aside className="auth-page__aside hidden p-10 lg:flex lg:flex-col lg:justify-between">
+          <Link href="/" className="font-serif text-2xl font-semibold text-paper">Zeno.</Link>
+          <div>
+            <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.24em] text-marker">New member record · No. 01</p>
+            <p className="font-serif text-4xl leading-tight text-paper">The right study group can change the whole semester.</p>
           </div>
-          <p className="mt-2 text-gray-600">
-            Create your account and start finding study groups that match your interests
-          </p>
-        </div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-paper/60">Find people · Make progress</p>
+        </aside>
 
-        {/* Signup Form */}
-        <SecureForm
-          onSubmit={handleSecureSubmit}
-          rateLimitConfig={RATE_LIMITS.SIGNUP}
-          rateLimitIdentifier={formData.email || 'anonymous'}
-          className="space-y-6"
-          disabled={loading}
-        >
+        <div className="p-6 sm:p-10 lg:p-12">
+          {/* Header */}
+          <div className="mb-9">
+            <Link href="/" className="mb-8 inline-block font-serif text-xl font-semibold text-ink lg:hidden">Zeno.</Link>
+            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-purple-700">New member record · No. 001</p>
+            <h1 className="font-serif text-4xl font-medium tracking-tight text-ink sm:text-5xl">Join the study table.</h1>
+            <p className="mt-3 leading-relaxed text-ink-soft">
+              Create your account and start finding study groups that match your interests.
+            </p>
+          </div>
+
+          {/* Signup Form */}
+          <SecureForm
+            onSubmit={handleSecureSubmit}
+            rateLimitConfig={RATE_LIMITS.SIGNUP}
+            rateLimitIdentifier={formData.email || 'anonymous'}
+            className="catalog-form space-y-6"
+            disabled={loading}
+          >
           {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -277,6 +347,42 @@ export default function SignUp() {
             </div>
           </div>
 
+          {/* Username */}
+          <div className="space-y-3 mt-4">
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              Username
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="font-mono text-gray-400">@</span>
+              </div>
+              <Input
+                id="username"
+                name="username"
+                type="text"
+                required
+                minLength={3}
+                maxLength={24}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                value={formData.username}
+                onChange={handleChange}
+                onBlur={checkUsername}
+                className={`pl-10 pr-10 h-12 ${usernameStatus === 'taken' ? 'border-red-500' : usernameStatus === 'available' ? 'border-green-500' : ''}`}
+                placeholder="Choose a username"
+              />
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                {usernameStatus === 'checking' && <Loader2 className="h-4 w-4 animate-spin text-gray-400" />}
+                {usernameStatus === 'available' && <Check className="h-4 w-4 text-green-500" />}
+                {usernameStatus === 'taken' && <X className="h-4 w-4 text-red-500" />}
+              </div>
+            </div>
+            <p className={`text-xs ${usernameStatus === 'taken' ? 'text-red-600' : usernameStatus === 'available' ? 'text-green-600' : 'text-gray-500'}`}>
+              {usernameStatus === 'taken' ? 'That username is already taken.' : usernameStatus === 'available' ? 'Username is available.' : '3–24 letters, numbers, or underscores.'}
+            </p>
+          </div>
+
           {/* Email Field */}
           <div className="space-y-3 mt-4">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -300,7 +406,7 @@ export default function SignUp() {
                 }`}
                 placeholder="Enter your email"
               />
-              
+
               {/* Email validation status icon */}
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                 {isCheckingEmail ? (
@@ -312,7 +418,7 @@ export default function SignUp() {
                 ) : null}
               </div>
             </div>
-            
+
             {/* Email validation message */}
             {(emailError || isEmailAvailable === false || isEmailAvailable === true) && (
               <div className={`text-sm mt-2 ${
@@ -410,10 +516,10 @@ export default function SignUp() {
                 value={formData.password}
                 onChange={handleChange}
                 className={`pl-10 pr-12 h-12 ${
-                  formData.password && !passwordValidation.isValid 
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                    : formData.password && passwordValidation.isValid 
-                    ? 'border-green-300 focus:border-green-500 focus:ring-green-500' 
+                  formData.password && !passwordValidation.isValid
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                    : formData.password && passwordValidation.isValid
+                    ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
                     : ''
                 }`}
                 placeholder="Enter your password"
@@ -430,9 +536,9 @@ export default function SignUp() {
                 )}
               </button>
             </div>
-            
+
             {/* Password Validation */}
-            <PasswordValidation 
+            <PasswordValidation
               validation={passwordValidation}
               password={formData.password}
               showStrength={true}
@@ -456,10 +562,10 @@ export default function SignUp() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 className={`pl-10 pr-12 h-12 ${
-                  formData.confirmPassword && !passwordsMatch 
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                    : formData.confirmPassword && passwordsMatch 
-                    ? 'border-green-300 focus:border-green-500 focus:ring-green-500' 
+                  formData.confirmPassword && !passwordsMatch
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                    : formData.confirmPassword && passwordsMatch
+                    ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
                     : ''
                 }`}
                 placeholder="Confirm your password"
@@ -476,7 +582,7 @@ export default function SignUp() {
                 )}
               </button>
             </div>
-            
+
             {/* Password Match Validation */}
             {formData.confirmPassword && (
               <div className={`mt-2 text-sm flex items-center ${
@@ -499,9 +605,10 @@ export default function SignUp() {
 
           {/* Submit Button */}
           <Button
+            size="lg"
             type="submit"
             disabled={loading || !passwordValidation.isValid || !passwordsMatch}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-4 h-12 w-full rounded-sm shadow-[0.25rem_0.25rem_0_0_#241a35] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[0.1rem_0.1rem_0_0_#241a35] disabled:opacity-50"
           >
             {loading ? (
               <>
@@ -514,35 +621,18 @@ export default function SignUp() {
               </>
             )}
           </Button>
-        </SecureForm>
+          </SecureForm>
 
-        {/* Sign In Link */}
-        <div className="text-center">
-          <p className="text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link href="/login" className="font-medium text-purple-600 hover:text-purple-500">
-              Sign in here
-            </Link>
-          </p>
-        </div>
-
-        {/* Divider */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
+          {/* Sign In Link */}
+          <div className="mt-8 border-t border-dashed border-ink/20 pt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Already have an account?{" "}
+              <Link href="/login" className="font-medium text-purple-600 hover:text-purple-500">
+                Sign in here
+              </Link>
+            </p>
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-gradient-to-br from-purple-50 via-white to-purple-100 text-gray-500">
-              Or continue with
-            </span>
-          </div>
-        </div>
 
-        {/* Social Login Placeholder */}
-        <div className="text-center">
-          <p className="text-xs text-gray-500">
-            Social login options coming soon
-          </p>
         </div>
       </div>
     </div>

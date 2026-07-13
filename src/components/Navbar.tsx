@@ -2,22 +2,31 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { Users, Home, Plus, User, Search, LogOut, ChevronDown, LayoutDashboard } from "lucide-react";
+import { Users, User, Search, LogOut, ChevronDown, LayoutDashboard } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import MaintenanceToggle from "./MaintenanceToggle";
+import SignOutConfirmationDialog from "./SignOutConfirmationDialog";
 
 export default function Navbar() {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [showSignOutConfirmation, setShowSignOutConfirmation] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const { user, signOut } = useAuth();
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleSignOut = async () => {
-    await signOut();
-    router.push("/");
-    setIsProfileDropdownOpen(false);
+    setIsSigningOut(true);
+    try {
+      await signOut();
+      setIsProfileDropdownOpen(false);
+      setShowSignOutConfirmation(false);
+      router.push("/");
+    } finally {
+      setIsSigningOut(false);
+    }
   };
 
   // Close dropdown when clicking outside
@@ -43,20 +52,38 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <>
+      <nav className="bg-paper/90 backdrop-blur-xl border-b border-ink/15 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-16 md:h-16">
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-3 group">
-              <div className="bg-purple-600 text-white w-10 h-10 rounded-xl flex items-center justify-center  transition-transform shadow-md">
-                <span className="font-bold text-lg">Z</span>
+              <div className="bg-ink text-paper w-9 h-9 md:w-10 md:h-10 rounded-[3px] flex items-center justify-center shadow-[2px_2px_0_0_rgba(124,58,237,0.9)] transition-transform group-hover:-translate-y-0.5">
+                <span className="font-serif font-semibold text-xl">Z</span>
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-xl text-gray-900">Zeno</span>
-                <span className="text-xs text-gray-500 -mt-1">Study Groups</span>
+                <span className="font-serif font-semibold text-xl text-ink leading-tight">Zeno</span>
               </div>
             </Link>
+          </div>
+
+          <div className="flex md:hidden items-center gap-2">
+            {user ? (
+              <Button asChild variant="outline" size="sm" className="h-10 gap-2 border-ink/15 bg-paper-deep/70 px-2.5">
+                <Link href="/profile" aria-label="Open profile">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-700 text-[11px] font-semibold text-white">{getUserInitials()}</span>
+                  <span className="max-w-20 truncate font-mono text-[10px] uppercase tracking-wider text-ink">Account</span>
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Link href="/login" className="px-2 py-2 font-mono text-[10px] font-semibold uppercase tracking-[.14em] text-ink-soft">Sign in</Link>
+                <Button asChild size="sm" className="px-3 font-mono text-[10px] uppercase tracking-[.12em]">
+                  <Link href="/signup">Join</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Desktop Navigation */}
@@ -66,27 +93,28 @@ export default function Navbar() {
               <>
                 <Link
                   href="/dashboard"
-                  className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center space-x-2 text-ink-soft hover:text-purple-700 px-4 py-2 font-mono text-xs uppercase tracking-[0.15em] transition-colors"
                 >
                   <LayoutDashboard className="h-4 w-4" />
                   <span>Dashboard</span>
                 </Link>
-                
+
                 <Link
                   href="/groups"
-                  className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center space-x-2 text-ink-soft hover:text-purple-700 px-4 py-2 font-mono text-xs uppercase tracking-[0.15em] transition-colors"
                 >
                   <Search className="h-4 w-4" />
                   <span>Browse Groups</span>
                 </Link>
-                
+
                 {/* Profile Avatar Dropdown */}
                 <div className="relative" ref={dropdownRef}>
                   <button
+                    type="button"
                     onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                    className="flex cursor-pointer items-center space-x-2 px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:text-purple-700"
                   >
-                    <div className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">
+                    <div className="w-8 h-8 bg-purple-700 text-white rounded-full flex items-center justify-center text-xs font-semibold">
                       {getUserInitials()}
                     </div>
                     <ChevronDown className={`h-4 w-4 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
@@ -94,36 +122,40 @@ export default function Navbar() {
 
                   {/* Dropdown Menu */}
                   {isProfileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                      <div className="px-4 py-2 border-b border-gray-100">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                    <div className="absolute right-0 mt-2 w-48 bg-paper rounded-[3px] shadow-[4px_4px_0_0_rgba(36,26,53,0.12)] border border-ink/15 py-1 z-50">
+                      <div className="px-4 py-2 border-b border-ink/10">
+                        <p className="text-sm font-medium text-ink truncate">
                           {user?.user_metadata?.name || user?.email}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                        <p className="text-xs text-ink-soft truncate">{user?.email}</p>
                       </div>
-                      
+
                       <Link
                         href="/profile"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="flex items-center px-4 py-2 text-sm text-ink-soft hover:bg-paper-deep hover:text-ink transition-colors"
                         onClick={() => setIsProfileDropdownOpen(false)}
                       >
                         <User className="h-4 w-4 mr-3" />
                         Profile Settings
                       </Link>
-                      
+
                       <Link
                         href="/my-groups"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="flex items-center px-4 py-2 text-sm text-ink-soft hover:bg-paper-deep hover:text-ink transition-colors"
                         onClick={() => setIsProfileDropdownOpen(false)}
                       >
                         <Users className="h-4 w-4 mr-3" />
                         My Groups
                       </Link>
-                      
-                      <div className="border-t border-gray-100 mt-1 pt-1">
+
+                      <div className="border-t border-ink/10 mt-1 pt-1">
                         <button
-                          onClick={handleSignOut}
-                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          type="button"
+                          onClick={() => {
+                            setIsProfileDropdownOpen(false);
+                            setShowSignOutConfirmation(true);
+                          }}
+                          className="flex w-full cursor-pointer items-center px-4 py-2 text-sm text-red-700 transition-colors hover:bg-red-100/50"
                         >
                           <LogOut className="h-4 w-4 mr-3" />
                           Sign Out
@@ -138,20 +170,25 @@ export default function Navbar() {
               <>
                 <Link
                   href="/"
-                  className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 px-4 py-2 rounded-lg text-sm font-medium"
+                  className="flex items-center space-x-2 text-ink-soft hover:text-purple-700 px-4 py-2 font-mono text-xs uppercase tracking-[0.15em] transition-colors"
                 >
                   <span>Home</span>
                 </Link>
                 <Link
                   href="/login"
-                  className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 px-4 py-2 rounded-lg text-sm font-medium"
+                  className="flex items-center space-x-2 text-ink-soft hover:text-purple-700 px-4 py-2 font-mono text-xs uppercase tracking-[0.15em] transition-colors"
                 >
                   <span>Sign In</span>
                 </Link>
-                <Button size="lg" variant="primary" asChild>
+                <Button
+                  size="lg"
+                  variant="primary"
+                  asChild
+                  className="rounded-sm bg-purple-700 shadow-[2px_2px_0_0_#241a35] transition-all hover:translate-x-px hover:translate-y-px hover:bg-purple-800 hover:shadow-[1px_1px_0_0_#241a35]"
+                >
                   <Link
                     href="/signup"
-                    className="flex items-center space-x-2px-5 py-2 rounded-lg text-sm font-semibold ml-2"
+                    className="flex items-center px-5 py-2 text-sm font-semibold ml-2"
                   >
                     <span>Get Started</span>
                   </Link>
@@ -162,6 +199,13 @@ export default function Navbar() {
 
         </div>
       </div>
-    </nav>
+      </nav>
+      <SignOutConfirmationDialog
+        open={showSignOutConfirmation}
+        onOpenChange={setShowSignOutConfirmation}
+        onConfirm={handleSignOut}
+        isSigningOut={isSigningOut}
+      />
+    </>
   );
 }

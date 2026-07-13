@@ -84,38 +84,38 @@ export default function InstallPrompt() {
 
   return (
     <div className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm z-50 animate-slideIn">
-      <div className="bg-white border border-purple-200 rounded-lg shadow-lg p-4">
+      <div className="bg-paper border border-ink/20 rounded-[3px] shadow-[5px_5px_0_0_rgba(36,26,53,0.15)] p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center">
-            <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center mr-3">
-              <Download className="h-5 w-5 text-white" />
+            <div className="w-10 h-10 bg-ink text-paper rounded-[3px] flex items-center justify-center mr-3">
+              <Download className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Install Zeno</h3>
-              <p className="text-sm text-gray-600">Get the full app experience</p>
+              <h3 className="font-serif font-medium text-lg text-ink leading-tight">Install Zeno</h3>
+              <p className="text-sm text-ink-soft">Get the full app experience</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleDismiss}
-            className="text-gray-400 hover:text-gray-600 p-1"
+            className="text-ink-soft/60 hover:text-ink p-1"
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
         
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center text-sm text-gray-600">
-            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+        <div className="space-y-2 mb-4 border-y border-dashed border-ink/15 py-3">
+          <div className="flex items-center text-sm text-ink-soft">
+            <span className="w-1.5 h-1.5 rotate-45 bg-purple-700 mr-2.5"></span>
             Works offline
           </div>
-          <div className="flex items-center text-sm text-gray-600">
-            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+          <div className="flex items-center text-sm text-ink-soft">
+            <span className="w-1.5 h-1.5 rotate-45 bg-purple-700 mr-2.5"></span>
             Faster loading
           </div>
-          <div className="flex items-center text-sm text-gray-600">
-            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+          <div className="flex items-center text-sm text-ink-soft">
+            <span className="w-1.5 h-1.5 rotate-45 bg-purple-700 mr-2.5"></span>
             App-like experience
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function InstallPrompt() {
         <div className="flex space-x-2">
           <Button
             onClick={handleInstallClick}
-            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+            className="flex-1 shadow-[2px_2px_0_0_#241a35] transition-all hover:translate-x-px hover:translate-y-px hover:shadow-[1px_1px_0_0_#241a35]"
             size="sm"
           >
             <Download className="h-4 w-4 mr-2" />
@@ -133,7 +133,6 @@ export default function InstallPrompt() {
             variant="outline"
             onClick={handleDismiss}
             size="sm"
-            className="border-gray-300"
           >
             Later
           </Button>

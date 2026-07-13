@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, Users, Clock, MapPin, ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { Search, SlidersHorizontal, Plus, X, BookOpen } from "lucide-react";
 import GroupCard from "@/components/GroupCard";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
+import { sanitizeInput } from "@/lib/inputSanitization";
 
 const subjects = ["All Subjects", "Computer Science", "Mathematics", "Physics", "Chemistry", "Business", "Engineering"];
 const frequencies = ["All Frequencies", "Daily", "Twice weekly", "Weekly", "Bi-weekly"];
@@ -74,63 +78,90 @@ export default function Groups() {
     const matchesSearch = group.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          group.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          group.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+
     const matchesSubject = selectedSubject === "All Subjects" || group.subject === selectedSubject;
     const matchesFrequency = selectedFrequency === "All Frequencies" || group.frequency === selectedFrequency;
-    
+
     return matchesSearch && matchesSubject && matchesFrequency;
   });
 
+  const hasActiveFilters = Boolean(
+    searchTerm || selectedSubject !== "All Subjects" || selectedFrequency !== "All Frequencies"
+  );
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedSubject("All Subjects");
+    setSelectedFrequency("All Frequencies");
+  };
+
   return (
     <ProtectedRoute>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Study Groups
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Find and join study groups that match your interests and schedule
-        </p>
+      <div className="animate-fade-up mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-4xl">
+          <p className="mb-3 flex items-center gap-3 font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-ink-soft">
+            <span aria-hidden className="h-px w-9 bg-purple-700/60" />
+            The open catalog · Volume 01
+          </p>
+          <h1 className="mb-3 font-serif text-4xl font-medium tracking-tight text-ink sm:text-5xl lg:text-6xl">
+            Find your <em className="highlight-marker italic text-purple-700">study circle</em>.
+          </h1>
+          <p className="max-w-2xl text-base leading-relaxed text-ink-soft sm:text-lg">
+            Browse student-led groups by subject, schedule, and shared goals. Your next
+            breakthrough may be one conversation away.
+          </p>
+        </div>
+        <Button asChild size="lg" className="group h-10 w-full rounded-sm px-5 text-sm sm:w-auto">
+          <Link href="/create-group">
+            <Plus className="transition-transform group-hover:rotate-90" />
+            Create a group
+          </Link>
+        </Button>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
-        <div className="flex flex-col lg:flex-row gap-4">
+      <section aria-label="Search and filter study groups" className="catalog-toolbar animate-fade-up [animation-delay:100ms]">
+        <div className="catalog-toolbar__row">
           {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-            <input
+          <div className="catalog-toolbar__search relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-ink-soft" />
+            <Input
               type="text"
               placeholder="Search groups by name, description, or tags..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              onChange={(e) => setSearchTerm(sanitizeInput(e.target.value, { maxLength: 100 }))}
+              className="h-10 rounded-sm border-ink/25 bg-paper pl-10 text-sm shadow-none"
             />
           </div>
 
           {/* Filter Button */}
-          <button
+          <Button
+            type="button"
+            size="lg"
+            variant={showFilters ? "outline" : "primary"}
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center space-x-2 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+            aria-expanded={showFilters}
+            className="catalog-toolbar__filter h-10 rounded-sm px-4"
           >
-            <Filter className="w-5 h-5" />
-            <span>Filters</span>
-          </button>
+            {showFilters ? <X /> : <SlidersHorizontal />}
+            <span>{showFilters ? "Close" : "Filters"}</span>
+          </Button>
         </div>
 
         {/* Filters */}
         {showFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 animate-slide-in">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="animate-fade-up mt-3 border-t border-dashed border-ink/20 pt-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-soft">
                   Subject
                 </label>
                 <select
                   value={selectedSubject}
                   onChange={(e) => setSelectedSubject(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="h-12 w-full rounded-sm border border-ink/25 bg-paper px-3 text-sm"
                 >
                   {subjects.map((subject) => (
                     <option key={subject} value={subject}>
@@ -141,13 +172,13 @@ export default function Groups() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-soft">
                   Meeting Frequency
                 </label>
                 <select
                   value={selectedFrequency}
                   onChange={(e) => setSelectedFrequency(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="h-12 w-full rounded-sm border border-ink/25 bg-paper px-3 text-sm"
                 >
                   {frequencies.map((frequency) => (
                     <option key={frequency} value={frequency}>
@@ -159,49 +190,63 @@ export default function Groups() {
             </div>
           </div>
         )}
-      </div>
+      </section>
 
       {/* Results Count */}
       {!loading && (
-        <div className="mb-6">
-          <p className="text-gray-600 dark:text-gray-400">
-            Showing {filteredGroups.length} study group{filteredGroups.length !== 1 ? 's' : ''}
+        <div className="catalog-results-toolbar">
+          <p className="font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-soft">
+            Catalog results · {String(filteredGroups.length).padStart(2, "0")} group{filteredGroups.length !== 1 ? 's' : ''}
           </p>
+          <div className="flex items-center gap-3">
+            {hasActiveFilters && (
+              <button type="button" onClick={clearFilters} className="inline-flex w-fit items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.15em] text-purple-700 underline decoration-purple-700/35 underline-offset-4 hover:decoration-purple-700">
+                <X className="h-3.5 w-3.5" /> Clear search & filters
+              </button>
+            )}
+          </div>
         </div>
       )}
 
       {/* Loading State */}
       {loading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading study groups...</p>
+        <div className="py-20 text-center">
+          <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-2 border-ink/15 border-t-purple-700"></div>
+          <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-soft">Opening the catalog...</p>
         </div>
       ) : (
         /* Groups Grid */
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="animate-fade-up grid gap-6 [animation-delay:160ms] md:grid-cols-2 lg:grid-cols-3">
           {filteredGroups.map((group) => (
-            <GroupCard key={group.id} group={group} />
+            <GroupCard key={group.id} group={group} layout="card" />
           ))}
         </div>
       )}
 
       {/* No Results */}
       {!loading && filteredGroups.length === 0 && (
-        <div className="text-center py-12">
-          <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            No study groups found
+        <div className="animate-fade-up py-16 text-center sm:py-24">
+          <div className="mx-auto mb-6 grid h-20 w-20 -rotate-2 place-items-center border border-dashed border-ink/30 bg-marker/20">
+            {hasActiveFilters ? <Search className="h-10 w-10 text-ink-soft" /> : <BookOpen className="h-10 w-10 text-ink-soft" />}
+          </div>
+          <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-purple-700">Catalog note · 000</p>
+          <h3 className="mb-3 font-serif text-2xl font-medium text-ink sm:text-3xl">
+            {hasActiveFilters ? "No matching study circles" : "The shelves are waiting"}
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Try adjusting your search criteria or create a new study group.
+          <p className="mx-auto mb-8 max-w-lg leading-relaxed text-ink-soft">
+            {hasActiveFilters
+              ? "Try a broader search, clear your filters, or begin a group of your own."
+              : "Be the first to add a study group and invite others to learn alongside you."}
           </p>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105">
-            Create New Group
-          </button>
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+            {hasActiveFilters && <Button variant="outline" size="lg" onClick={clearFilters} className="h-12 rounded-sm px-6">Clear filters</Button>}
+            <Button asChild size="lg" className="group h-12 rounded-sm px-6 shadow-[0.25rem_0.25rem_0_0_#241a35] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[0.1rem_0.1rem_0_0_#241a35]">
+              <Link href="/create-group"><Plus className="transition-transform group-hover:rotate-90" />Create a group</Link>
+            </Button>
+          </div>
         </div>
       )}
       </div>
     </ProtectedRoute>
   );
 }
-

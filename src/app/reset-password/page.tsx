@@ -98,7 +98,7 @@ function ResetPasswordForm() {
 
   if (!validToken && !success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-linear-to-br from-purple-50 via-white to-purple-100 flex items-center justify-center px-4">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <div className="flex justify-center mb-6">
@@ -146,7 +146,7 @@ function ResetPasswordForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-linear-to-br from-purple-50 via-white to-purple-100 flex items-center justify-center px-4">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <div className="flex justify-center mb-6">
@@ -187,7 +187,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-linear-to-br from-purple-50 via-white to-purple-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-8">
         {/* Header */}
         <div className="text-center">
@@ -330,7 +330,7 @@ function ResetPasswordForm() {
 export default function ResetPassword() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-linear-to-br from-purple-50 to-white flex items-center justify-center p-4">
         <div className="flex items-center space-x-2">
           <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
           <span className="text-gray-600">Loading...</span>

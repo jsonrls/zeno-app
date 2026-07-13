@@ -26,10 +26,10 @@ export default function ProtectedRoute({
   // Show loading spinner while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-paper flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-purple-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-purple-700 mx-auto mb-4" />
+          <p className="font-mono text-xs uppercase tracking-[0.25em] text-ink-soft">Loading…</p>
         </div>
       </div>
     );

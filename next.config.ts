@@ -4,8 +4,22 @@ const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
+  cleanupOutdatedCaches: true,
   disable: process.env.NODE_ENV === 'development',
   runtimeCaching: [
+    // Next build assets are content-hashed. Cache by their immutable URL and
+    // never let a broad fallback rule mix assets from different deployments.
+    {
+      urlPattern: /\/_next\/static\/.*/i,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'next-static-v2',
+        expiration: {
+          maxEntries: 96,
+          maxAgeSeconds: 30 * 24 * 60 * 60
+        }
+      }
+    },
     {
       urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
       handler: 'CacheFirst',
@@ -87,9 +101,9 @@ const withPWA = require('next-pwa')({
     },
     {
       urlPattern: /\.(?:js)$/i,
-      handler: 'StaleWhileRevalidate',
+      handler: 'NetworkFirst',
       options: {
-        cacheName: 'static-js-assets',
+        cacheName: 'static-js-assets-v2',
         expiration: {
           maxEntries: 32,
           maxAgeSeconds: 24 * 60 * 60 // 24 hours
@@ -98,9 +112,9 @@ const withPWA = require('next-pwa')({
     },
     {
       urlPattern: /\.(?:css|less)$/i,
-      handler: 'StaleWhileRevalidate',
+      handler: 'NetworkFirst',
       options: {
-        cacheName: 'static-style-assets',
+        cacheName: 'static-style-assets-v2',
         expiration: {
           maxEntries: 32,
           maxAgeSeconds: 24 * 60 * 60 // 24 hours
@@ -123,7 +137,10 @@ const withPWA = require('next-pwa')({
       urlPattern: /.*/i,
       handler: 'NetworkFirst',
       options: {
-        cacheName: 'others',
+        cacheName: 'pages-v2',
+        cacheableResponse: {
+          statuses: [0, 200]
+        },
         expiration: {
           maxEntries: 32,
           maxAgeSeconds: 24 * 60 * 60 // 24 hours

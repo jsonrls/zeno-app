@@ -61,6 +61,7 @@ export type Profile = {
   id: string
   email: string
   name: string
+  username?: string
   course: string
   year_level: string
   bio?: string

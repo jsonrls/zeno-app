@@ -10,8 +10,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, userData: any) => Promise<any>;
-  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, userData: { name: string; username: string; course: string; yearLevel: string }) => Promise<any>;
+  signIn: (identifier: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
 }
 
@@ -108,31 +108,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
 
-      // Create profile record
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email: data.user.email,
-            name: userData.name,
-            course: userData.course,
-            year_level: userData.yearLevel,
-          });
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-          
-          // Handle unique constraint violation on email
-          if (profileError.code === '23505' && profileError.message?.includes('email')) {
-            const customError = { 
-              message: 'This email address is already registered. Please use a different email or try signing in instead.' 
-            };
-            return { data: null, error: customError };
-          }
-        }
-      }
-
+      // The database's on_auth_user_created trigger creates the corresponding
+      // profile from userData. This also works when email confirmation is on
+      // and signUp intentionally returns no authenticated session.
       return { data, error: null };
     } catch (error: any) {
       console.error('Sign up error:', error);
@@ -150,21 +128,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (identifier: string, password: string) => {
     try {
+      const normalizedIdentifier = identifier.trim().toLowerCase();
+
       // Check rate limit for login attempts
-      const rateLimitResult = checkRateLimit(email, RATE_LIMITS.LOGIN);
+      const rateLimitResult = checkRateLimit(normalizedIdentifier, RATE_LIMITS.LOGIN);
       if (!rateLimitResult.allowed) {
         const rateLimitError = createRateLimitError(rateLimitResult.resetTime);
         return { data: null, error: rateLimitError };
       }
 
-      // First, check if user exists in our profiles table
+      // Supabase Auth accepts an email/password pair. A username is resolved
+      // to its profile email first, then follows the same normal Auth flow.
+      const usesEmail = normalizedIdentifier.includes('@');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('email')
-        .eq('email', email)
-        .single();
+        [usesEmail ? 'eq' : 'ilike'](usesEmail ? 'email' : 'username', normalizedIdentifier)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('Profile lookup during sign in failed:', profileError);
+      }
+
+      const email = profileData?.email || (usesEmail ? normalizedIdentifier : '');
+
+      if (!email) {
+        return {
+          data: null,
+          error: new Error('Invalid email or username, or password. Please try again.'),
+        };
+      }
 
       // Attempt sign in
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -173,17 +168,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        // Provide more specific error messages based on the error and user existence
+        // Keep the identifier failure generic; this avoids revealing whether a
+        // particular email address or username is registered.
         if (error.message.includes('Invalid login credentials')) {
-          if (!profileData && profileError) {
-            // User doesn't exist in our profiles table
-            const userNotFoundError = new Error('User not found. Please check your email or sign up for an account.');
-            return { data: null, error: userNotFoundError };
-          } else {
-            // User exists but password is wrong
-            const wrongPasswordError = new Error('Invalid password. Please check your password and try again.');
-            return { data: null, error: wrongPasswordError };
-          }
+          return {
+            data: null,
+            error: new Error('Invalid email or username, or password. Please try again.'),
+          };
         }
         throw error;
       }

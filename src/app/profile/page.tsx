@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User, Lock, Eye, EyeOff, Save, Edit3, X, Plus, Trash2, MessageSquare, Phone, Facebook, Instagram, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { User, Lock, Eye, EyeOff, Save, Edit3, Plus, Trash2, MessageSquare, Phone, Facebook, Instagram, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { supabase, type SocialContact } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
-import { sanitizePassword, sanitizeName, sanitizeCourse, sanitizeYearLevel } from "@/lib/inputSanitization";
+import { sanitizeInput, sanitizePassword, sanitizeName, sanitizeCourse, sanitizeYearLevel } from "@/lib/inputSanitization";
+import { ensureProfile } from "@/lib/ensureProfile";
+import SignOutConfirmationDialog from "@/components/SignOutConfirmationDialog";
 
 interface UserProfile {
   id: string;
@@ -26,7 +29,8 @@ interface UserProfile {
 // Using SocialContact type from supabase.ts
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [socialContacts, setSocialContacts] = useState<SocialContact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +39,8 @@ export default function ProfilePage() {
   const [editingPassword, setEditingPassword] = useState(false);
   const [addingSocial, setAddingSocial] = useState(false);
   const [deletingContact, setDeletingContact] = useState<string | null>(null);
+  const [showSignOutConfirmation, setShowSignOutConfirmation] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -75,18 +81,7 @@ export default function ProfilePage() {
       if (!user) return;
 
       try {
-        // Fetch user profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
-          console.error('Error fetching profile:', profileError);
-          setError("Failed to load profile");
-          return;
-        }
+        const profileData = await ensureProfile(user);
 
         setProfile(profileData);
         setBasicForm({
@@ -109,9 +104,9 @@ export default function ProfilePage() {
           setSocialContacts(socialData || []);
         }
 
-      } catch (err) {
-        console.error('Error:', err);
-        setError("Failed to load profile data");
+      } catch (err: any) {
+        console.error('Unable to load or repair profile:', err?.message || err);
+        setError(err?.message || "Failed to load profile data");
       } finally {
         setLoading(false);
       }
@@ -143,7 +138,7 @@ export default function ProfilePage() {
 
       setSuccess("Profile updated successfully!");
       setEditingBasic(false);
-      
+
       // Update local profile state
       if (profile) {
         setProfile({
@@ -286,15 +281,16 @@ export default function ProfilePage() {
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error signing out:', error);
-        setError("Failed to sign out");
-      }
-      // The auth context will handle the redirect
+      setIsSigningOut(true);
+      setError("");
+      await signOut();
+      setShowSignOutConfirmation(false);
+      router.replace("/");
     } catch (err: any) {
       console.error('Error signing out:', err);
       setError(err.message || "Failed to sign out");
+    } finally {
+      setIsSigningOut(false);
     }
   };
 
@@ -326,57 +322,44 @@ export default function ProfilePage() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="profile-page max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Profile Settings
-          </h1>
-          <p className="text-gray-600">
-            Manage your account information and preferences
-          </p>
-
-          {/* Status Messages */}
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm">{error}</p>
-            </div>
-          )}
-          {success && (
-            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-800 text-sm">{success}</p>
-            </div>
-          )}
+        <div className="profile-hero animate-fade-up">
+          <div className="profile-hero__tape" aria-hidden="true" />
+          <div>
+            <p className="profile-eyebrow">Student registry · personal copy</p>
+            <h1>Profile dossier</h1>
+            <p className="profile-hero__description">
+              Keep your study identity, contact paths, and account access in order.
+            </p>
+          </div>
         </div>
 
+        {/* Status Messages */}
+        {error && (
+          <div className="profile-notice profile-notice--error" role="alert">
+            <p>{error}</p>
+          </div>
+        )}
+        {success && (
+          <div className="profile-notice profile-notice--success" role="status">
+            <p>{success}</p>
+          </div>
+        )}
+
         {/* Mobile Profile Avatar - Shows only on mobile */}
-        <div className="block lg:hidden mb-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Avatar</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <div className="w-24 h-24 bg-purple-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                {profile.name?.charAt(0) || profile.email.charAt(0)}
-              </div>
-              <p className="text-sm text-gray-600 mb-4">
-                {profile.name || 'User'}
-              </p>
-              <Button variant="outline" size="sm" disabled>
-                <Edit3 className="h-4 w-4 mr-2" />
-                Change Avatar
-              </Button>
-              <p className="text-xs text-gray-500 mt-2">Coming soon</p>
-            </CardContent>
-          </Card>
+        <div className="profile-mobile-id lg:hidden">
+          <span>Enrollment</span>
+          <strong>{profile.course || "Course not set"}</strong>
+          <span>{profile.year_level || "Year level not set"}</span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Information */}
-            <Card>
-              <CardHeader>
+            <Card className="profile-card">
+              <CardHeader className="profile-card__header">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center">
                     <User className="h-5 w-5 mr-2" />
@@ -459,8 +442,8 @@ export default function ProfilePage() {
                         placeholder="Tell us a bit about yourself..."
                       />
                     </div>
-                    <Button 
-                      variant="primary" 
+                    <Button
+                      variant="primary"
                       className="w-full"
                       onClick={handleSaveBasic}
                       disabled={saving}
@@ -500,10 +483,10 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            
+
             {/* Social Contacts */}
-            <Card>
-              <CardHeader>
+            <Card className="profile-card">
+              <CardHeader className="profile-card__header">
                 <div className="flex items-center justify-between">
                   <CardTitle>Social Contacts</CardTitle>
                   <Button
@@ -536,7 +519,7 @@ export default function ProfilePage() {
                         ))}
                       </select>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         {socialForm.platform === 'WhatsApp' ? 'Phone Number' : 'Username'}
@@ -545,28 +528,28 @@ export default function ProfilePage() {
                         value={socialForm.username}
                         onChange={(e) => setSocialForm({...socialForm, username: sanitizeInput(e.target.value, { maxLength: 100 })})}
                         placeholder={
-                          socialForm.platform 
-                            ? socialPlatforms.find(p => p.name === socialForm.platform)?.placeholder 
+                          socialForm.platform
+                            ? socialPlatforms.find(p => p.name === socialForm.platform)?.placeholder
                             : "Enter username or contact"
                         }
                         className="text-sm"
                       />
                       {socialForm.platform && (
                         <p className="text-xs text-gray-500 mt-1">
-                          {socialForm.platform === 'WhatsApp' 
+                          {socialForm.platform === 'WhatsApp'
                             ? 'Include country code (e.g., +1234567890)'
-                            : socialForm.platform === 'Instagram' 
+                            : socialForm.platform === 'Instagram'
                             ? 'Enter without @ symbol'
                             : `Enter your ${socialForm.platform} username or profile URL`
                           }
                         </p>
                       )}
                     </div>
-                    
+
                     <div className="flex gap-2 pt-2">
                       <Button
                         variant="outline"
-                        size="sm"
+                        size="lg"
                         onClick={() => {
                           setAddingSocial(false);
                           setSocialForm({ platform: "", username: "", url: "" });
@@ -576,7 +559,7 @@ export default function ProfilePage() {
                         Cancel
                       </Button>
                       <Button
-                        size="sm"
+                        size="lg"
                         variant="primary"
                         onClick={handleAddSocial}
                         className="flex-1"
@@ -593,9 +576,9 @@ export default function ProfilePage() {
                         const platform = socialPlatforms.find(p => p.name === contact.platform);
                         const IconComponent = platform ? platform.icon : MessageSquare;
                         return (
-                          <div key={contact.id} className="flex items-start sm:items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-purple-200 hover:shadow-sm transition-all duration-200">
+                          <div key={contact.id} className="profile-contact-row flex items-start sm:items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-purple-200 hover:shadow-sm transition-all duration-200">
                             <div className="flex items-start sm:items-center space-x-3 flex-1 min-w-0">
-                              <div className="flex-shrink-0 mt-0.5 sm:mt-0">
+                              <div className="shrink-0 mt-0.5 sm:mt-0">
                                 <IconComponent className="h-5 w-5 text-purple-600" />
                               </div>
                               <div className="flex-1 min-w-0">
@@ -607,21 +590,21 @@ export default function ProfilePage() {
                                 </div>
                                 <p className="text-sm text-gray-600 break-all sm:truncate mb-1">{contact.username}</p>
                                 {contact.url && (
-                                  <a 
-                                    href={contact.url} 
-                                    target="_blank" 
+                                  <a
+                                    href={contact.url}
+                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-xs text-purple-600 hover:text-purple-700 hover:underline inline-flex items-center"
                                   >
-                                    <span className="truncate max-w-[120px] sm:max-w-[150px]">Open {contact.platform}</span>
-                                    <svg className="w-3 h-3 ml-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <span className="truncate max-w-30 sm:max-w-37.5">Open {contact.platform}</span>
+                                    <svg className="w-3 h-3 ml-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                     </svg>
                                   </a>
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-start sm:items-center space-x-2 flex-shrink-0 mt-0.5 sm:mt-0">
+                            <div className="flex items-start sm:items-center space-x-2 shrink-0 mt-0.5 sm:mt-0">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -661,8 +644,8 @@ export default function ProfilePage() {
             </Card>
 
             {/* Password Settings */}
-            <Card>
-              <CardHeader>
+            <Card className="profile-card">
+              <CardHeader className="profile-card__header">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center">
                     <Lock className="h-5 w-5 mr-2" />
@@ -706,7 +689,7 @@ export default function ProfilePage() {
                         </button>
                       </div>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         New Password
@@ -732,7 +715,7 @@ export default function ProfilePage() {
                         </button>
                       </div>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Confirm New Password
@@ -758,9 +741,10 @@ export default function ProfilePage() {
                         </button>
                       </div>
                     </div>
-                    
-                    <Button 
-                      variant="primary" 
+
+                    <Button
+                      variant="primary"
+                      size="lg"
                       className="w-full"
                       onClick={handleChangePassword}
                       disabled={saving}
@@ -784,28 +768,24 @@ export default function ProfilePage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Profile Avatar - Desktop only */}
-            <Card className="hidden lg:block">
-              <CardHeader>
-                <CardTitle>Profile Avatar</CardTitle>
+            <Card className="profile-card profile-avatar-card hidden lg:block">
+              <CardHeader className="profile-card__header">
+                <CardTitle>Member card</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <div className="w-24 h-24 bg-purple-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                <div className="profile-avatar-mark mx-auto mb-4">
                   {profile.name?.charAt(0) || profile.email.charAt(0)}
                 </div>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="font-semibold text-ink mb-1">
                   {profile.name || 'User'}
                 </p>
-                <Button variant="outline" size="sm" disabled>
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Change Avatar
-                </Button>
-                <p className="text-xs text-gray-500 mt-2">Coming soon</p>
+                <p className="text-sm text-ink-soft">Avatar editing is coming soon.</p>
               </CardContent>
             </Card>
 
             {/* Account Info */}
-            <Card>
-              <CardHeader>
+            <Card className="profile-card">
+              <CardHeader className="profile-card__header">
                 <CardTitle>Account Information</CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-2">
@@ -824,8 +804,8 @@ export default function ProfilePage() {
 
         {/* Sign Out Section */}
         <div className="mt-8 pt-8 border-t border-gray-200">
-          <Card className="bg-red-50 border-red-200">
-            <CardHeader>
+          <Card className="profile-card profile-signout-card bg-red-50 border-red-200">
+            <CardHeader className="profile-card__header">
               <CardTitle className="flex items-center text-red-800">
                 <LogOut className="h-5 w-5 mr-2" />
                 Sign Out
@@ -838,7 +818,8 @@ export default function ProfilePage() {
                 </p>
                 <Button
                   variant="destructive"
-                  onClick={handleSignOut}
+                  size="lg"
+                  onClick={() => setShowSignOutConfirmation(true)}
                   className="w-full bg-red-600 hover:bg-red-700 text-white"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
@@ -851,10 +832,10 @@ export default function ProfilePage() {
 
         {/* Confirmation Dialog */}
         {deletingContact && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+          <div className="profile-dialog-backdrop fixed inset-0 flex items-center justify-center z-50 p-4">
+            <div className="profile-dialog max-w-md w-full p-6">
               <div className="flex items-center mb-4">
-                <div className="flex-shrink-0 w-10 h-10 mx-auto flex items-center justify-center rounded-full bg-red-100">
+                <div className="shrink-0 w-10 h-10 mx-auto flex items-center justify-center rounded-full bg-red-100">
                   <Trash2 className="w-6 h-6 text-red-600" />
                 </div>
               </div>
@@ -869,7 +850,7 @@ export default function ProfilePage() {
                   const contact = socialContacts.find(c => c.id === deletingContact);
                   const platform = socialPlatforms.find(p => p.name === contact?.platform);
                   const IconComponent = platform ? platform.icon : MessageSquare;
-                  
+
                   return contact ? (
                     <div className="flex items-center justify-center space-x-3 p-3 bg-gray-50 rounded-lg mb-6">
                       <IconComponent className="h-5 w-5 text-purple-600" />
@@ -900,6 +881,12 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
+        <SignOutConfirmationDialog
+          open={showSignOutConfirmation}
+          onOpenChange={setShowSignOutConfirmation}
+          onConfirm={handleSignOut}
+          isSigningOut={isSigningOut}
+        />
       </div>
     </ProtectedRoute>
   );
