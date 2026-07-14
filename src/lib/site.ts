@@ -7,4 +7,4 @@ export const siteDescription =
 
 export const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-  "https://zeno-study.vercel.app";
+  "https://synesis.jsonreales.com/";

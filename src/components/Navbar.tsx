@@ -61,7 +61,7 @@ export default function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="group block" aria-label="Synesis home">
               <Image
-                src="/images/logo.png"
+                src="/logo.png"
                 alt="Synesis"
                 width={250}
                 height={100}

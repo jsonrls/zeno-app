@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // Check if maintenance mode is enabled via environment variable
   const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
-  
+
   if (isMaintenanceMode) {
     // Allow access to maintenance page and static assets
     if (pathname === '/maintenance' ||
@@ -15,12 +15,13 @@ export function middleware(request: NextRequest) {
         pathname.startsWith('/favicon') ||
         pathname.startsWith('/icons') ||
         pathname.startsWith('/manifest') ||
+        pathname.startsWith('/images') ||
         pathname === '/og' ||
         pathname.startsWith('/sw-custom') ||
-        pathname.startsWith('/zeno-logo')) {
+        pathname.startsWith('/logo')) {
       return NextResponse.next();
     }
-    
+
     // Redirect all other requests to maintenance page
     const response = NextResponse.redirect(new URL('/maintenance', request.url));
     response.headers.set('X-Robots-Tag', 'noindex');

@@ -11,17 +11,17 @@ export const getBaseUrl = () => {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL;
   }
-  
+
   // For production deployment, use the known domain
   if (process.env.NODE_ENV === 'production') {
-    return 'https://zeno-study.vercel.app';
+    return 'https://synesis.jsonreales.com/';
   }
-  
+
   // For development, check for custom port
   if (typeof window !== 'undefined') {
     return window.location.origin;
   }
-  
+
   // Fallback for development
   return 'http://localhost:3000';
 }
