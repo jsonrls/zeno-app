@@ -119,6 +119,23 @@ body {
     linear-gradient(to right, rgba(36, 26, 53, 0.06) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(36, 26, 53, 0.06) 1px, transparent 1px);
   background-size: 2rem 2rem;
+  animation: grid-drift 5s linear infinite;
+}
+
+/* Shift exactly one tile so the loop has no visible jump. */
+@keyframes grid-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 2rem 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-grid-paper {
+    animation: none;
+  }
 }
 
 /* Subtle paper grain overlay — parent gets texture, children stay above it */
