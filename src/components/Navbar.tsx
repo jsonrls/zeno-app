@@ -73,12 +73,15 @@ export default function Navbar() {
 
           <div className="flex md:hidden items-center gap-2">
             {user ? (
-              <Button asChild variant="outline" size="sm" className="h-10 gap-2 border-ink/15 bg-paper-deep/70 px-2.5">
-                <Link href="/profile" aria-label="Open profile">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-700 text-[11px] font-semibold text-white">{getUserInitials()}</span>
-                  <span className="max-w-20 truncate font-mono text-[10px] uppercase tracking-wider text-ink">Account</span>
-                </Link>
-              </Button>
+              <button
+                type="button"
+                className="flex h-10 w-10 items-center justify-center text-ink-soft transition-colors hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-700"
+                onClick={() => setShowSignOutConfirmation(true)}
+                aria-label="Sign out"
+                title="Sign out"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
             ) : (
               <>
                 <Link href="/login" className="px-2 py-2 font-mono text-[10px] font-semibold uppercase tracking-[.14em] text-ink-soft">Sign in</Link>

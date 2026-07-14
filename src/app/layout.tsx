@@ -65,11 +65,20 @@ export const metadata: Metadata = {
     siteName,
     title: "Find Study Groups and Study Partners | Synesis",
     description: siteDescription,
+    images: [
+      {
+        url: "/images/3-colored.png",
+        width: 250,
+        height: 100,
+        alt: "Synesis",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Find Study Groups and Study Partners | Synesis",
     description: siteDescription,
+    images: ["/images/3-colored.png"],
   },
 };
 
