@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -8,13 +8,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="bg-paper text-ink w-10 h-10 rounded-[3px] flex items-center justify-center">
-                <span className="font-serif font-semibold text-xl">Z</span>
-              </div>
-              <div>
-                <div className="font-serif font-semibold text-2xl text-paper leading-tight">Zeno</div>
-              </div>
+            <div className="inline-flex rounded-[3px] px-3 py-2">
+              <Image
+                src="/images/2-transparent.png"
+                alt="Synesis"
+                width={250}
+                height={100}
+                className="h-12 w-auto sm:h-16"
+              />
             </div>
             <p className="text-paper/70 mb-6 max-w-md leading-relaxed">
               Connecting students worldwide to create meaningful study partnerships and achieve academic success together.
@@ -62,7 +63,7 @@ export default function Footer() {
 
         <div className="mt-12 pt-8 border-t border-paper/15 flex flex-col md:flex-row justify-between items-center gap-3">
           <p className="font-mono text-xs tracking-wide text-paper/50">
-            &copy; 2025 Zeno Study Group Finder. All rights reserved.
+            &copy; 2025 Synesis Study Group Finder. All rights reserved.
           </p>
         </div>
       </div>

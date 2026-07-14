@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { Users, BookOpen, Clock, MapPin, FileText, ArrowLeft, Plus, Loader2, CalendarDays, X, Hash } from "lucide-react";
+import { Users, BookOpen, Clock, MapPin, FileText, ArrowLeft, Plus, Loader2, CalendarDays, X, Hash, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -25,6 +25,7 @@ export default function CreateGroup() {
     description: "",
     frequency: "",
     platform: "",
+    meetingLink: "",
     maxMembers: "",
   });
   const [tags, setTags] = useState<string[]>([]);
@@ -68,6 +69,8 @@ export default function CreateGroup() {
     "Hybrid",
   ];
 
+  const requiresMeetingLink = formData.platform !== "" && formData.platform !== "In-person";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -90,6 +93,26 @@ export default function CreateGroup() {
       if (!formData.platform) {
         throw new Error("Please select a platform");
       }
+
+      let meetingLink: string | null = null;
+      if (requiresMeetingLink) {
+        const submittedLink = sanitizeInput(formData.meetingLink, { maxLength: 2048 });
+
+        if (!submittedLink) {
+          throw new Error(`Please provide a ${formData.platform} meeting link`);
+        }
+
+        try {
+          const url = new URL(submittedLink);
+          if (url.protocol !== "https:" && url.protocol !== "http:") {
+            throw new Error("Meeting links must use http:// or https://");
+          }
+          meetingLink = url.toString();
+        } catch {
+          throw new Error("Please provide a valid meeting link that starts with http:// or https://");
+        }
+      }
+
       if (selectedDays.length === 0) {
         throw new Error("Please select at least one meeting day");
       }
@@ -134,6 +157,20 @@ export default function CreateGroup() {
       if (groupError) {
         console.error('Error creating group:', groupError);
         throw new Error(groupError.message || "Failed to create group");
+      }
+
+      if (meetingLink) {
+        const { error: meetingLinkError } = await supabase
+          .from("group_meeting_links")
+          .insert({
+            group_id: groupData.id,
+            meeting_link: meetingLink,
+          });
+
+        if (meetingLinkError) {
+          console.error("Error saving meeting link:", meetingLinkError);
+          throw new Error("Group was created but the meeting link could not be saved. Please try again.");
+        }
       }
 
       // Add the creator as the first member of the group
@@ -190,14 +227,17 @@ export default function CreateGroup() {
       sanitizedValue = sanitizeInput(value, { maxLength: 1000 });
     } else if (name === 'subject' || name === 'frequency' || name === 'platform') {
       sanitizedValue = sanitizeInput(value, { maxLength: 100 });
+    } else if (name === 'meetingLink') {
+      sanitizedValue = sanitizeInput(value, { maxLength: 2048, trim: false });
     } else if (name === 'maxMembers') {
       sanitizedValue = value; // Keep as is for number input
     }
 
-    setFormData({
-      ...formData,
+    setFormData((previous) => ({
+      ...previous,
       [name]: sanitizedValue,
-    });
+      ...(name === "platform" && sanitizedValue === "In-person" ? { meetingLink: "" } : {}),
+    }));
     // Clear error when user starts typing
     if (error) setError("");
   };
@@ -369,7 +409,7 @@ export default function CreateGroup() {
               Tags <span className="text-gray-500">(optional, max 5)</span>
             </label>
             <div className="space-y-3">
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Hash className="h-5 w-5 text-gray-400" />
@@ -387,12 +427,13 @@ export default function CreateGroup() {
                 </div>
                 <Button
                   type="button"
+                  size="lg"
                   onClick={handleAddTag}
                   disabled={!tagInput.trim() || tags.includes(tagInput.trim()) || tags.length >= 5}
                   variant="primary"
-                  className="h-12 max-h-12 min-w-20 rounded-sm px-4"
+                  className="group h-12 rounded-sm px-6 shadow-[0.25rem_0.25rem_0_0_#241a35] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[0.1rem_0.1rem_0_0_#241a35]"
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Plus className="h-4 w-4 !text-white transition-transform group-hover:rotate-90" />
                   Add
                 </Button>
               </div>
@@ -481,6 +522,33 @@ export default function CreateGroup() {
             </div>
           </div>
 
+          {requiresMeetingLink && (
+            <div className="border border-purple-700/30 bg-purple-100/30 p-5">
+              <label htmlFor="meetingLink" className="block text-sm font-medium text-ink">
+                {formData.platform} meeting link <span className="text-purple-700">*</span>
+              </label>
+              <div className="relative mt-2">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Link2 className="h-5 w-5 text-purple-700" />
+                </div>
+                <Input
+                  id="meetingLink"
+                  name="meetingLink"
+                  type="url"
+                  inputMode="url"
+                  required
+                  value={formData.meetingLink}
+                  onChange={handleChange}
+                  className="pl-10"
+                  placeholder={formData.platform === "Zoom" ? "https://zoom.us/j/..." : "https://meet.google.com/..."}
+                />
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-ink-soft">
+                Paste the direct invitation link for members to join this online meeting.
+              </p>
+            </div>
+          )}
+
           {/* Schedule Section */}
           <div className="space-y-6">
             <div>
@@ -522,7 +590,6 @@ export default function CreateGroup() {
                       }}
                       disabled={(date) => date < new Date()}
                       initialFocus
-                      className="bg-white calendar-purple"
                     />
                   </PopoverContent>
                 </Popover>
@@ -638,6 +705,7 @@ export default function CreateGroup() {
           {/* Submit Button */}
           <Button
             type="submit"
+            size="lg"
             disabled={isLoading}
             className="group h-12 w-full rounded-sm shadow-[0.25rem_0.25rem_0_0_#241a35] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[0.1rem_0.1rem_0_0_#241a35]"
           >

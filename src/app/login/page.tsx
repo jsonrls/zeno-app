@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AtSign, Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,14 +15,13 @@ import {
   sanitizeEmail,
   sanitizeInput,
   sanitizePassword,
-  sanitizeUsername,
 } from "@/lib/inputSanitization";
 
 export default function Login() {
   const router = useRouter();
   const { signIn } = useAuth();
   const [formData, setFormData] = useState({
-    identifier: "",
+    email: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -47,7 +47,7 @@ export default function Login() {
     let sanitizedValue = value;
 
     // Apply appropriate sanitization based on field type
-    if (name === 'identifier') {
+    if (name === 'email') {
       // Preserve valid email characters while the address is still being
       // entered (for example, the dot in `name.surname` before `@`).
       sanitizedValue = sanitizeInput(value, { maxLength: 254, trim: false });
@@ -65,28 +65,30 @@ export default function Login() {
     setIsLoading(true);
     setError("");
 
-    const identifier = (formData.get('identifier') as string).includes('@')
-      ? sanitizeEmail(formData.get('identifier') as string)
-      : sanitizeUsername(formData.get('identifier') as string);
-    const password = sanitizePassword(formData.get('password') as string);
+    try {
+      const email = sanitizeEmail(formData.get('email') as string);
+      const password = sanitizePassword(formData.get('password') as string);
 
-    const { data, error } = await signIn(identifier, password);
+      const { error } = await signIn(email, password);
 
-    if (error) {
-      setError(error.message || "Failed to sign in");
-      throw new Error(error.message || "Failed to sign in");
-    } else {
+      if (error) {
+        setError(error.message || "Failed to sign in");
+        throw new Error(error.message || "Failed to sign in");
+      }
+
       router.push("/dashboard");
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (
     <div className="auth-page min-h-screen px-4 py-12 sm:py-16">
       <div className="relative mx-auto grid w-full max-w-5xl overflow-hidden border border-ink/20 bg-[#fffcf5] shadow-[6px_6px_0_rgba(36,26,53,0.12)] lg:grid-cols-[0.9fr_1.1fr]">
         <aside className="auth-page__aside hidden p-10 lg:flex lg:flex-col lg:justify-between">
-          <Link href="/" className="font-serif text-2xl font-semibold text-paper">Zeno.</Link>
+          <Link href="/" aria-label="Synesis home">
+            <Image src="/images/2-transparent.png" alt="Synesis" width={250} height={100} className="h-auto w-40" priority />
+          </Link>
           <div>
             <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.24em] text-marker">Member desk · No. 01</p>
             <p className="font-serif text-4xl leading-tight text-paper">Better work begins with the right people.</p>
@@ -96,11 +98,13 @@ export default function Login() {
         <div className="p-6 sm:p-10 lg:p-12">
         {/* Header */}
         <div className="mb-9">
-          <Link href="/" className="mb-8 inline-block font-serif text-xl font-semibold text-ink lg:hidden">Zeno.</Link>
+          <Link href="/" className="mb-8 inline-block lg:hidden" aria-label="Synesis home">
+            <Image src="/images/2-transparent.png" alt="Synesis" width={250} height={100} className="h-auto w-32" priority />
+          </Link>
           <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-purple-700">Return to your desk</p>
           <h1 className="font-serif text-4xl font-medium tracking-tight text-ink sm:text-5xl">Welcome back.</h1>
           <p className="mt-3 leading-relaxed text-ink-soft">
-            Sign in to your Zeno account and continue your learning journey
+            Sign in to your Synesis account and continue your learning journey
           </p>
         </div>
 
@@ -108,31 +112,32 @@ export default function Login() {
         <SecureForm
           onSubmit={handleSecureSubmit}
           rateLimitConfig={RATE_LIMITS.LOGIN}
-          rateLimitIdentifier={formData.identifier || 'anonymous'}
+          rateLimitIdentifier={formData.email || 'anonymous'}
           className="catalog-form space-y-6"
           disabled={isLoading}
         >
-          {/* Email or username field */}
+          {/* Email field */}
           <div className="space-y-2">
-            <label htmlFor="identifier" className="block text-sm font-medium text-gray-700">
-              Email or Username
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <AtSign className="h-5 w-5 text-gray-400" />
               </div>
               <Input
-                id="identifier"
-                name="identifier"
-                type="text"
+                id="email"
+                name="email"
+                type="email"
                 required
                 autoCapitalize="none"
                 autoCorrect="off"
-                autoComplete="username"
-                value={formData.identifier}
+                autoComplete="email"
+                inputMode="email"
+                value={formData.email}
                 onChange={handleInputChange}
                 className="pl-10 h-12"
-                placeholder="Enter your email or username"
+                placeholder="you@example.com"
               />
             </div>
           </div>

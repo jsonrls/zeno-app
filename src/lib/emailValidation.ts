@@ -62,7 +62,7 @@ class EmailValidationService {
   constructor() {
     this.apiKey = process.env.NEXT_PUBLIC_ABSTRACT_EMAIL_API_KEY || '';
     
-    if (!this.apiKey) {
+    if (!this.apiKey && typeof window !== 'undefined') {
       console.warn('Abstract Email API key not found in environment variables');
     }
   }

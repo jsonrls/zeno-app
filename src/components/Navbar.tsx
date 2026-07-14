@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { Users, User, Search, LogOut, ChevronDown, LayoutDashboard } from "lucide-react";
 import { Button } from "./ui/button";
@@ -58,13 +59,15 @@ export default function Navbar() {
         <div className="flex justify-between h-16 md:h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-3 group">
-              <div className="bg-ink text-paper w-9 h-9 md:w-10 md:h-10 rounded-[3px] flex items-center justify-center shadow-[2px_2px_0_0_rgba(124,58,237,0.9)] transition-transform group-hover:-translate-y-0.5">
-                <span className="font-serif font-semibold text-xl">Z</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-serif font-semibold text-xl text-ink leading-tight">Zeno</span>
-              </div>
+            <Link href="/" className="group block" aria-label="Synesis home">
+              <Image
+                src="/images/logo.png"
+                alt="Synesis"
+                width={250}
+                height={100}
+                priority
+                className="h-10 w-auto transition-transform group-hover:-translate-y-0.5 md:h-11"
+              />
             </Link>
           </div>
 

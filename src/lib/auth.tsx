@@ -4,14 +4,13 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase, safeGetSession, safeSignOut, getBaseUrl } from "./supabase";
 import { checkRateLimit, RATE_LIMITS, createRateLimitError } from "./security";
-import { checkEmailUniquenessClient } from "./emailUniqueness";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   signUp: (email: string, password: string, userData: { name: string; username: string; course: string; yearLevel: string }) => Promise<any>;
-  signIn: (identifier: string, password: string) => Promise<any>;
+  signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
 }
 
@@ -80,14 +79,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { data: null, error: rateLimitError };
       }
 
-      // Check email uniqueness before attempting signup
-      const emailUniquenessResult = await checkEmailUniquenessClient(email);
-      if (!emailUniquenessResult.isAvailable) {
-        const error = emailUniquenessResult.error || 
-          'This email address is already registered. Please use a different email or try signing in instead.';
-        return { data: null, error: { message: error } };
-      }
-
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -128,52 +119,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signIn = async (identifier: string, password: string) => {
+  const signIn = async (email: string, password: string) => {
     try {
-      const normalizedIdentifier = identifier.trim().toLowerCase();
+      const normalizedEmail = email.trim().toLowerCase();
 
       // Check rate limit for login attempts
-      const rateLimitResult = checkRateLimit(normalizedIdentifier, RATE_LIMITS.LOGIN);
+      const rateLimitResult = checkRateLimit(normalizedEmail, RATE_LIMITS.LOGIN);
       if (!rateLimitResult.allowed) {
         const rateLimitError = createRateLimitError(rateLimitResult.resetTime);
         return { data: null, error: rateLimitError };
       }
 
-      // Supabase Auth accepts an email/password pair. A username is resolved
-      // to its profile email first, then follows the same normal Auth flow.
-      const usesEmail = normalizedIdentifier.includes('@');
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('email')
-        [usesEmail ? 'eq' : 'ilike'](usesEmail ? 'email' : 'username', normalizedIdentifier)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error('Profile lookup during sign in failed:', profileError);
-      }
-
-      const email = profileData?.email || (usesEmail ? normalizedIdentifier : '');
-
-      if (!email) {
+      if (!normalizedEmail.includes('@')) {
         return {
           data: null,
-          error: new Error('Invalid email or username, or password. Please try again.'),
+          error: new Error('Enter the email address associated with your account.'),
         };
       }
 
-      // Attempt sign in
+      // Authenticate directly with Supabase. Profile data remains readable
+      // only after authentication, so the login flow never needs a pre-login
+      // lookup that could expose account information.
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password,
       });
 
       if (error) {
-        // Keep the identifier failure generic; this avoids revealing whether a
-        // particular email address or username is registered.
+        // Keep credential failures generic; this avoids revealing whether an
+        // email address is registered.
         if (error.message.includes('Invalid login credentials')) {
           return {
             data: null,
-            error: new Error('Invalid email or username, or password. Please try again.'),
+            error: new Error('Invalid email or password. Please try again.'),
           };
         }
         throw error;

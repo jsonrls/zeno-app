@@ -3,7 +3,8 @@ import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 import { AuthProvider } from "@/lib/auth";
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { siteDescription, siteName, siteUrl } from "@/lib/site";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,27 +32,53 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: "Zeno - Study Group Finder",
-  description: "Find and join study groups with fellow students. Connect, collaborate, and succeed together.",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Zeno",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Find Study Groups and Study Partners | Synesis",
+    template: "%s | Synesis",
+  },
+  description: siteDescription,
+  applicationName: siteName,
+  keywords: ["study groups", "study group finder", "study partners", "student collaboration"],
+  category: "education",
+  formatDetection: {
+    telephone: false,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
   icons: {
-    icon: [
-      { url: "/favicons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicons/android-chrome-192x192.png", sizes: "192x192", type: "image/png" },
-      { url: "/favicons/android-chrome-512x512.png", sizes: "512x512", type: "image/png" },
+    icon: [{ url: "/favicon.ico", type: "image/x-icon" }],
+    shortcut: ["/favicon.ico"],
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName,
+    title: "Find Study Groups and Study Partners | Synesis",
+    description: siteDescription,
+    images: [
+      {
+        url: "/og",
+        width: 1200,
+        height: 630,
+        alt: "Synesis — Find your study group",
+      },
     ],
-    apple: [
-      { url: "/favicons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
-    ],
-    other: [
-      { url: "/favicons/favicon.ico", type: "image/x-icon" },
-    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Find Study Groups and Study Partners | Synesis",
+    description: siteDescription,
+    images: ["/og"],
   },
 };
 
@@ -62,41 +89,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <meta name="application-name" content="Zeno" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Zeno" />
-        <meta name="description" content="Find and join study groups with fellow students" />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-config" content="/icons/browserconfig.xml" />
-        <meta name="msapplication-TileColor" content="#7c3aed" />
-        <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="theme-color" content="#7c3aed" />
-        
-        <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
-        
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png" />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="shortcut icon" href="/favicons/favicon.ico" />
-        
-        <meta name="twitter:card" content="summary" />
-        <meta name="twitter:url" content="https://zeno-app.vercel.app" />
-        <meta name="twitter:title" content="Zeno - Study Group Finder" />
-        <meta name="twitter:description" content="Find and join study groups with fellow students" />
-        <meta name="twitter:image" content="https://zeno-app.vercel.app/favicons/android-chrome-192x192.png" />
-        <meta name="twitter:creator" content="@zenoapp" />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="Zeno - Study Group Finder" />
-        <meta property="og:description" content="Find and join study groups with fellow students" />
-        <meta property="og:site_name" content="Zeno - Study Group Finder" />
-        <meta property="og:url" content="https://zeno-app.vercel.app" />
-        <meta property="og:image" content="https://zeno-app.vercel.app/favicons/android-chrome-192x192.png" />
-
-      </head>
       <body
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased`}
@@ -104,6 +96,7 @@ export default function RootLayout({
         <AuthProvider>
           <AppShell>{children}</AppShell>
         </AuthProvider>
+        <SpeedInsights />
       </body>
     </html>
   );

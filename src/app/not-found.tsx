@@ -116,7 +116,7 @@ export default function NotFound() {
                 <div className="text-sm font-semibold text-gray-900">
                   How It Works
                 </div>
-                <div className="text-xs text-gray-500">Learn about Zeno</div>
+                <div className="text-xs text-gray-500">Learn about Synesis</div>
               </div>
             </Link>
           </div>

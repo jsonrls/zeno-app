@@ -1,6 +1,19 @@
 import Link from "next/link";
+import Image from "next/image";
+import type { Metadata } from "next";
 import { Users, BookOpen, Calendar, Zap, ArrowRight, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { siteDescription } from "@/lib/site";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    url: "/",
+  },
+  description: siteDescription,
+};
 
 const SUBJECTS = [
   "Calculus II",
@@ -120,16 +133,16 @@ export default function Home() {
             </p>
 
             <div className="animate-fade-up [animation-delay:90ms]">
-              <SectionEyebrow>Zeno · Study group finder</SectionEyebrow>
+              <SectionEyebrow>Synesis · Study group finder</SectionEyebrow>
             </div>
 
             <h1 className="animate-fade-up mt-5 mb-6 font-serif text-5xl font-medium leading-[1.04] tracking-tight text-ink [animation-delay:160ms] sm:text-6xl lg:text-[4.4rem]">
-              Good grades are a{" "}
+              Find a study group that makes good grades a{" "}
               <em className="highlight-marker italic text-purple-700">group project</em>.
             </h1>
 
             <p className="animate-fade-up mb-9 max-w-xl text-lg leading-relaxed text-ink-soft [animation-delay:240ms] md:text-xl">
-              Zeno connects you with classmates who share your subjects, your
+              Synesis connects you with classmates who share your subjects, your
               schedule, and your deadlines. Find your people — and never cram
               alone again.
             </p>
@@ -236,9 +249,9 @@ export default function Home() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-14 flex flex-col justify-between gap-8 md:flex-row md:items-end">
             <div>
-              <SectionEyebrow>§ 01 — The case for Zeno</SectionEyebrow>
+              <SectionEyebrow>§ 01 — The case for Synesis</SectionEyebrow>
               <h2 className="mt-4 font-serif text-4xl font-medium tracking-tight text-ink md:text-5xl">
-                Why students choose <em className="italic text-purple-700">Zeno</em>
+                Why students choose <em className="italic text-purple-700">Synesis</em>
               </h2>
             </div>
             <div className="max-w-sm">
@@ -275,7 +288,7 @@ export default function Home() {
 
       {/* ============ Stats ============ */}
       <section className="border-y border-ink/15 bg-paper-deep px-4 py-16">
-        <h2 className="sr-only">Zeno by the numbers</h2>
+        <h2 className="sr-only">Synesis by the numbers</h2>
         <div className="mx-auto max-w-6xl">
           <div className="mb-10">
             <SectionEyebrow>§ 02 — By the numbers</SectionEyebrow>
@@ -301,12 +314,14 @@ export default function Home() {
 
       {/* ============ CTA ============ */}
       <section className="texture-grain relative overflow-hidden bg-ink px-4 py-24">
-        <span
+        <Image
           aria-hidden
-          className="pointer-events-none absolute -right-6 -bottom-24 select-none font-serif text-[16rem] italic leading-none text-paper/5 md:text-[22rem]"
-        >
-          Z
-        </span>
+          src="/images/1-transparent.png"
+          alt=""
+          width={250}
+          height={100}
+          className="pointer-events-none absolute -right-6 -bottom-2 w-[18rem] select-none opacity-[0.09] grayscale brightness-0 invert md:-right-10 md:w-[30rem]"
+        />
         <div className="relative mx-auto max-w-3xl text-center">
           <p className="mb-6 flex items-center justify-center gap-3 font-mono text-[11px] font-medium uppercase tracking-[0.25em] text-purple-300/90">
             <span aria-hidden className="h-px w-10 bg-purple-300/50" />

@@ -57,7 +57,7 @@ export default function SignOutConfirmationDialog({
           End session
         </p>
         <h2 id="sign-out-dialog-title" className="font-serif text-3xl font-medium text-ink">
-          Sign out of Zeno?
+          Sign out of Synesis?
         </h2>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-soft">
           You&apos;ll need to sign in again to manage your groups and profile.

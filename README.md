@@ -1,6 +1,6 @@
 # Zeno App
 
-A modern, secure study group management platform built with Next.js, featuring user authentication, group management, and progressive web app capabilities.
+A modern, secure study group management platform built with Next.js, featuring user authentication and group management.
 
 ## 📋 Project Overview
 
@@ -10,7 +10,6 @@ A modern, secure study group management platform built with Next.js, featuring u
 - **Study Group Discovery**: Easy-to-use platform for finding and joining study groups
 - **Group Management**: Comprehensive tools for creating and managing study groups
 - **Secure Authentication**: Robust user authentication with security best practices
-- **Offline Access**: PWA features enable offline functionality
 - **Cross-Platform**: Responsive design works on desktop and mobile devices
 
 ## 🚀 Key Features
@@ -18,9 +17,8 @@ A modern, secure study group management platform built with Next.js, featuring u
 ### 🔐 Authentication System
 - User registration and login
 - Password reset functionality
-- Email validation and uniqueness checking
+- Email-format validation and username availability checking
 - Protected routes and session management
-- Rate limiting for security
 
 ### 👥 Group Management
 - Create and discover study groups
@@ -43,12 +41,6 @@ A modern, secure study group management platform built with Next.js, featuring u
 - Secure database functions
 - Leaked password protection
 
-### 📱 Progressive Web App
-- Offline functionality
-- Install prompt for mobile/desktop
-- Custom service worker
-- Responsive design
-
 ## 🛠️ Technology Stack
 
 ### Frontend
@@ -64,12 +56,11 @@ A modern, secure study group management platform built with Next.js, featuring u
 - **Backend**: Supabase (Authentication & Database)
 - **Database**: PostgreSQL with Row Level Security
 - **API**: Next.js API Routes
-- **PWA**: next-pwa v5.6.0 with Workbox
 
 ### Additional Libraries
 - **Date Handling**: date-fns v4.1.0
 - **Validation**: Custom validation hooks
-- **Security**: CSRF protection, rate limiting
+- **Security**: Input sanitization and Supabase Row Level Security
 
 ## 🏗️ Project Structure
 
@@ -97,10 +88,7 @@ zeno-app/
 │       ├── security.ts      # Security utilities
 │       └── supabase.ts      # Supabase client
 ├── public/                  # Static assets
-│   ├── icons/              # App icons
-│   ├── manifest.json       # PWA manifest
-│   └── sw-custom.js        # Custom service worker
-└── database files/          # Database schema and migrations
+└── supabase/migrations/     # Database migrations
 ```
 
 ## 🚀 Getting Started
@@ -134,16 +122,12 @@ zeno-app/
    Create a `.env.local` file in the root directory:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_publishable_key
    ```
 
 4. **Database Setup**
    
-   Run the database schema in your Supabase SQL Editor:
-   ```bash
-   # Use the secure schema file
-   # Copy contents of database_schema_secure.sql to Supabase SQL Editor
-   ```
+   Apply the tracked migrations in `supabase/migrations/` to the intended Supabase project.
 
 ### Development
 
@@ -190,29 +174,18 @@ npm run lint
 
 2. **Database Configuration**
    - Enable Row Level Security
-   - Use the provided secure schema
-   - Set up proper policies for data access
-
-### PWA Configuration
-
-The app includes PWA configuration with:
-- Custom service worker (`public/sw-custom.js`)
-- Web app manifest (`public/manifest.json`)
-- Install prompt component
-- Offline page functionality
+   - Apply the tracked migrations
+   - Use least-privilege grants and policies for browser access
 
 ## 🛡️ Security Highlights
 
 ### Database Security
 - **Row Level Security (RLS)**: Comprehensive policies for data access control
-- **Secure Functions**: All database functions use explicit search paths
+- **Secure Functions**: Privileged database functions are not executable from the public API
 - **Input Sanitization**: Protection against XSS and injection attacks
 
 ### Authentication Security
-- **Rate Limiting**: Protection against brute force attacks
-- **CSRF Protection**: Token-based protection for forms
-- **Email Validation**: Server-side email uniqueness checking
-- **Password Security**: Integration with HaveIBeenPwned.org
+- **Password Security**: Enable Supabase leaked-password protection before production launch
 
 ### Application Security
 - **Protected Routes**: Authentication-required pages
@@ -221,15 +194,11 @@ The app includes PWA configuration with:
 
 ## 📖 API Reference
 
-### API Endpoints
-
-- `GET/POST /api/check-email` - Email uniqueness validation
-
 ### Database Functions
 
 - `handle_new_user()` - Handles new user registration
 - `handle_updated_at()` - Updates timestamp columns
-- `get_user_profile()` - Secure profile retrieval
+- `is_username_available()` - Safe username availability check for signup
 
 ## 🚀 Deployment
 

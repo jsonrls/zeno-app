@@ -7,6 +7,7 @@ import GroupCard from "@/components/GroupCard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { sanitizeInput } from "@/lib/inputSanitization";
 
@@ -31,6 +32,7 @@ interface Group {
 }
 
 export default function Groups() {
+  const { user, loading: authLoading } = useAuth();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,6 +42,15 @@ export default function Groups() {
 
   // Fetch groups from Supabase
   useEffect(() => {
+    // ProtectedRoute redirects anonymous visitors, but effects still run while
+    // that redirect is being scheduled. Do not request member-only data first.
+    if (authLoading) return;
+
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     async function fetchGroups() {
       try {
         const { data, error } = await supabase
@@ -72,7 +83,7 @@ export default function Groups() {
     }
 
     fetchGroups();
-  }, []);
+  }, [authLoading, user]);
 
   const filteredGroups = groups.filter((group: any) => {
     const matchesSearch = group.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -18,7 +18,7 @@ export default function MaintenancePage() {
         </h1>
         
         <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-          Zeno is currently undergoing scheduled maintenance to improve your experience. 
+          Synesis is currently undergoing scheduled maintenance to improve your experience.
           We're working hard to get everything back up and running smoothly.
         </p>
 
@@ -78,12 +78,10 @@ export default function MaintenancePage() {
         {/* Footer Note */}
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-500">
-            Thank you for your patience. We appreciate you choosing Zeno for your study group needs.
+            Thank you for your patience. We appreciate you choosing Synesis for your study group needs.
           </p>
         </div>
       </div>
     </div>
   );
 }
-
-

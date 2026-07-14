@@ -322,7 +322,7 @@ export default function ReportProblem() {
               Report a Problem
             </h1>
             <p className="text-gray-600">
-              Help us improve Zeno by reporting bugs, issues, or sharing your feedback
+              Help us improve Synesis by reporting bugs, issues, or sharing your feedback
             </p>
           </div>
         </div>

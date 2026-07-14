@@ -4,7 +4,6 @@ import { useAuth } from "@/lib/auth";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import MobileBottomNav from "./MobileBottomNav";
-import InstallPrompt from "./InstallPrompt";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -17,7 +16,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </main>
       <Footer />
       <MobileBottomNav />
-      <InstallPrompt />
     </div>
   );
 }

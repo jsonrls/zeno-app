@@ -337,11 +337,16 @@ export default function ManageGroupPage() {
     try {
       setError("");
 
-      // Delete group members first
-      await supabase
+      // Delete group members first. The creator is authorized to remove all
+      // members; surface a failure instead of continuing with a partial delete.
+      const { error: membersError } = await supabase
         .from('group_members')
         .delete()
         .eq('group_id', groupId);
+
+      if (membersError) {
+        throw membersError;
+      }
 
       // Delete the group
       const { error } = await supabase

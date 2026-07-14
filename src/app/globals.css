@@ -98,27 +98,6 @@ body {
   color: #faf6ee;
 }
 
-/* Calendar violet theme */
-.calendar-purple [data-selected-single="true"] {
-  background-color: #7c3aed !important;
-  color: #fff !important;
-}
-
-.calendar-purple [data-range-start="true"] {
-  background-color: #7c3aed !important;
-  color: #fff !important;
-}
-
-.calendar-purple [data-range-end="true"] {
-  background-color: #7c3aed !important;
-  color: #fff !important;
-}
-
-        .calendar-purple [data-range-middle="true"] {
-          background-color: #f0ebff !important;
-          color: #4c1d95 !important;
-        }
-
         /* Mobile bottom navigation safe area support */
         .h-safe-area-inset-bottom {
           height: env(safe-area-inset-bottom);

@@ -21,7 +21,7 @@ export async function ensureProfile(user: User) {
     .insert({
       id: user.id,
       email: user.email || '',
-      name: metadata.name || metadata.full_name || 'Zeno Student',
+      name: metadata.name || metadata.full_name || 'Synesis Student',
       course: metadata.course || '',
       year_level: metadata.yearLevel || metadata.year_level || '',
     })

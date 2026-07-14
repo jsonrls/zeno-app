@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Users, Clock, MapPin, Calendar, UserPlus, MessageCircle, Settings } from "lucide-react";
+import { ArrowLeft, Users, Clock, MapPin, Calendar, UserPlus, UserMinus, MessageCircle, Settings, X, ExternalLink, Facebook, Instagram, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { supabase } from "@/lib/supabase";
+import { supabase, type SocialContact } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 
 interface GroupMember {
@@ -17,7 +18,6 @@ interface GroupMember {
   joined_at: string;
   profiles: {
     name: string;
-    email: string;
     course: string;
     year_level: string;
   };
@@ -37,11 +37,28 @@ interface GroupDetails {
   updated_at: string;
   creator: {
     name: string;
-    email: string;
     course: string;
     year_level: string;
   };
   group_members: GroupMember[];
+}
+
+const socialContactIcons = {
+  WhatsApp: Phone,
+  Instagram,
+  Facebook,
+  Messenger: MessageCircle,
+} as const;
+
+function getSafeExternalUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 export default function GroupDetailPage() {
@@ -52,19 +69,28 @@ export default function GroupDetailPage() {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState("");
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
+  const [joinConfirmation, setJoinConfirmation] = useState("");
+  const [showUnjoinDialog, setShowUnjoinDialog] = useState(false);
+  const [unjoinConfirmation, setUnjoinConfirmation] = useState("");
+  const [unjoining, setUnjoining] = useState(false);
+  const [meetingLink, setMeetingLink] = useState<string | null>(null);
+  const [creatorContacts, setCreatorContacts] = useState<SocialContact[]>([]);
 
   const groupId = params.id as string;
+  const userId = user?.id;
 
   useEffect(() => {
     async function fetchGroupDetails() {
       try {
+        setMeetingLink(null);
+        setCreatorContacts([]);
         const { data, error } = await supabase
           .from('study_groups')
           .select(`
             *,
             creator:profiles!creator_id (
               name,
-              email,
               course,
               year_level
             ),
@@ -74,7 +100,6 @@ export default function GroupDetailPage() {
               joined_at,
               profiles (
                 name,
-                email,
                 course,
                 year_level
               )
@@ -92,6 +117,37 @@ export default function GroupDetailPage() {
         console.log('Fetched group data:', data);
         console.log('Creator data:', data?.creator);
         setGroup(data);
+
+        const isCurrentUserMember = Boolean(userId && data.group_members.some(
+          (member: GroupMember) => member.user_id === userId
+        ));
+
+        if (isCurrentUserMember) {
+          const [meetingLinkResult, creatorContactsResult] = await Promise.all([
+            supabase
+              .from("group_meeting_links")
+              .select("meeting_link")
+              .eq("group_id", data.id)
+              .maybeSingle(),
+            supabase
+              .from("social_contacts")
+              .select("id, user_id, platform, username, url, created_at, updated_at")
+              .eq("user_id", data.creator_id)
+              .order("created_at", { ascending: true }),
+          ]);
+
+          if (meetingLinkResult.error) {
+            console.error("Error loading meeting link:", meetingLinkResult.error);
+          } else {
+            setMeetingLink(getSafeExternalUrl(meetingLinkResult.data?.meeting_link ?? null));
+          }
+
+          if (creatorContactsResult.error) {
+            console.error("Error loading creator contacts:", creatorContactsResult.error);
+          } else {
+            setCreatorContacts(creatorContactsResult.data ?? []);
+          }
+        }
       } catch (err) {
         console.error('Error:', err);
         setError("Failed to load group details");
@@ -103,7 +159,7 @@ export default function GroupDetailPage() {
     if (groupId) {
       fetchGroupDetails();
     }
-  }, [groupId]);
+  }, [groupId, userId]);
 
   const handleJoinGroup = async () => {
     if (!user || !group) return;
@@ -119,12 +175,14 @@ export default function GroupDetailPage() {
 
       if (isAlreadyMember) {
         setError("You are already a member of this group");
+        setShowJoinDialog(false);
         return;
       }
 
       // Check if group is full
       if (group.group_members.length >= group.max_members) {
         setError("This group is already full");
+        setShowJoinDialog(false);
         return;
       }
 
@@ -138,6 +196,7 @@ export default function GroupDetailPage() {
       if (joinError) {
         console.error('Error joining group:', joinError);
         setError(joinError.message || "Failed to join group");
+        setShowJoinDialog(false);
         return;
       }
 
@@ -146,8 +205,39 @@ export default function GroupDetailPage() {
     } catch (err) {
       console.error('Error:', err);
       setError("Failed to join group");
+      setShowJoinDialog(false);
     } finally {
       setJoining(false);
+    }
+  };
+
+  const handleUnjoinGroup = async () => {
+    if (!user || !group || group.creator_id === user.id) return;
+
+    try {
+      setUnjoining(true);
+      setError("");
+
+      const { error: unjoinError } = await supabase
+        .from("group_members")
+        .delete()
+        .eq("group_id", group.id)
+        .eq("user_id", user.id);
+
+      if (unjoinError) {
+        console.error("Error leaving group:", unjoinError);
+        setError(unjoinError.message || "Failed to leave group");
+        setShowUnjoinDialog(false);
+        return;
+      }
+
+      window.location.reload();
+    } catch (err) {
+      console.error("Error:", err);
+      setError("Failed to leave group");
+      setShowUnjoinDialog(false);
+    } finally {
+      setUnjoining(false);
     }
   };
 
@@ -221,9 +311,28 @@ export default function GroupDetailPage() {
             </div>
 
             <div className="flex shrink-0 flex-wrap gap-3">
+              {!isCreator && isMember && (
+                <Button
+                  onClick={() => {
+                    setUnjoinConfirmation("");
+                    setShowUnjoinDialog(true);
+                  }}
+                  disabled={unjoining}
+                  variant="outline"
+                  size="lg"
+                  className="h-10 border-red-700 bg-red-700 px-5 text-white hover:border-red-800 hover:bg-red-800"
+                >
+                  <UserMinus />
+                  {unjoining ? "Unjoining..." : "Unjoin Group"}
+                </Button>
+              )}
+
               {!isMember && !isFull && (
                 <Button
-                  onClick={handleJoinGroup}
+                  onClick={() => {
+                    setJoinConfirmation("");
+                    setShowJoinDialog(true);
+                  }}
                   disabled={joining}
                   variant="primary"
                   size="lg"
@@ -285,6 +394,20 @@ export default function GroupDetailPage() {
                     <div>
                       <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-ink-soft">Platform</p>
                       <p className="text-sm text-ink">{group.platform}</p>
+                      {isMember && meetingLink && (
+                        <a
+                          href={meetingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-purple-700 underline-offset-2 hover:underline"
+                        >
+                          Open meeting link
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                      {!isMember && group.platform !== "In-person" && (
+                        <p className="mt-1 text-xs text-ink-soft">Join this group to access the meeting link.</p>
+                      )}
                     </div>
                   </div>
 
@@ -314,6 +437,47 @@ export default function GroupDetailPage() {
                       </p>
                     </div>
                   </div>
+                  {isMember && creatorContacts.length > 0 && (
+                    <div className="mt-4 border-t border-dashed border-ink/15 pt-3">
+                      <p className="mb-2 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
+                        Connect with {group.creator?.name?.split(" ")[0] || "the creator"}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {creatorContacts.map((contact) => {
+                          const Icon = socialContactIcons[contact.platform];
+                          const contactUrl = getSafeExternalUrl(contact.url);
+                          const contactContent = (
+                            <>
+                              <Icon className="h-3.5 w-3.5 shrink-0 text-purple-700" aria-hidden="true" />
+                              <span>{contact.platform}</span>
+                              <span className="max-w-28 truncate text-ink-soft">{contact.username}</span>
+                              {contactUrl && <ExternalLink className="h-3 w-3 shrink-0 text-ink-soft" aria-hidden="true" />}
+                            </>
+                          );
+
+                          return contactUrl ? (
+                            <a
+                              key={contact.id}
+                              href={contactUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label={`Open ${contact.platform} for ${group.creator?.name || "the creator"}`}
+                              className="inline-flex max-w-full items-center gap-1.5 border border-purple-700/30 bg-purple-100/45 px-2 py-1.5 text-xs text-ink transition-colors hover:border-purple-700 hover:bg-purple-100"
+                            >
+                              {contactContent}
+                            </a>
+                          ) : (
+                            <div
+                              key={contact.id}
+                              className="inline-flex max-w-full items-center gap-1.5 border border-ink/20 bg-paper px-2 py-1.5 text-xs text-ink"
+                            >
+                              {contactContent}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -388,6 +552,125 @@ export default function GroupDetailPage() {
             </Card>
           </div>
         </div>
+
+        {showJoinDialog && (
+          <div
+            className="fixed inset-0 z-50 grid place-items-center bg-ink/40 p-4 backdrop-blur-[2px]"
+            onMouseDown={() => {
+              if (!joining) setShowJoinDialog(false);
+            }}
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="join-group-title"
+              className="animate-fade-up relative w-full max-w-md border border-purple-700/45 bg-[#fffcf5] p-6 shadow-[6px_6px_0_#241a35]"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <span aria-hidden className="absolute -top-2 left-8 h-4 w-16 rotate-2 bg-marker/80" />
+              <button
+                type="button"
+                onClick={() => setShowJoinDialog(false)}
+                aria-label="Close join confirmation"
+                disabled={joining}
+                className="absolute right-3 top-3 text-ink-soft transition-colors hover:text-ink disabled:cursor-not-allowed"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-purple-700">Membership confirmation</p>
+              <h2 id="join-group-title" className="mb-3 font-serif text-3xl font-medium text-ink">Join this group?</h2>
+              <p className="mb-5 text-sm leading-relaxed text-ink-soft">
+                You are about to join <span className="font-medium text-ink">{group.name}</span>. Type <span className="font-medium text-purple-700">Confirm</span> to add yourself as a member.
+              </p>
+              <label htmlFor="join-confirmation" className="mb-2 block font-mono text-xs font-semibold tracking-[0.08em] text-ink-soft">
+                Type <span className="text-purple-700">Confirm</span> to continue
+              </label>
+              <Input
+                id="join-confirmation"
+                value={joinConfirmation}
+                onChange={(event) => setJoinConfirmation(event.target.value)}
+                placeholder="Confirm"
+                autoComplete="off"
+                disabled={joining}
+                className="h-10 border-purple-700/35 bg-paper"
+              />
+              <div className="mt-5 flex justify-end gap-3">
+                <Button type="button" variant="outline" onClick={() => setShowJoinDialog(false)} disabled={joining} className="bg-[#fffcf5]">
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  disabled={joinConfirmation !== "Confirm" || joining}
+                  onClick={handleJoinGroup}
+                >
+                  <UserPlus />
+                  {joining ? "Joining..." : "Join group"}
+                </Button>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {showUnjoinDialog && (
+          <div
+            className="fixed inset-0 z-50 grid place-items-center bg-ink/40 p-4 backdrop-blur-[2px]"
+            onMouseDown={() => {
+              if (!unjoining) setShowUnjoinDialog(false);
+            }}
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="unjoin-group-title"
+              className="animate-fade-up relative w-full max-w-md border border-red-700/45 bg-[#fffcf5] p-6 shadow-[6px_6px_0_#241a35]"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <span aria-hidden className="absolute -top-2 left-8 h-4 w-16 rotate-2 bg-red-200/90" />
+              <button
+                type="button"
+                onClick={() => setShowUnjoinDialog(false)}
+                aria-label="Close unjoin confirmation"
+                disabled={unjoining}
+                className="absolute right-3 top-3 text-ink-soft transition-colors hover:text-ink disabled:cursor-not-allowed"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-red-700">Membership change</p>
+              <h2 id="unjoin-group-title" className="mb-3 font-serif text-3xl font-medium text-ink">Unjoin this group?</h2>
+              <p className="mb-5 text-sm leading-relaxed text-ink-soft">
+                You will leave <span className="font-medium text-ink">{group.name}</span> and lose access to its meeting link. Type <span className="font-medium text-red-700">Confirm</span> to continue.
+              </p>
+              <label htmlFor="unjoin-confirmation" className="mb-2 block font-mono text-xs font-semibold tracking-[0.08em] text-ink-soft">
+                Type <span className="text-red-700">Confirm</span> to continue
+              </label>
+              <Input
+                id="unjoin-confirmation"
+                value={unjoinConfirmation}
+                onChange={(event) => setUnjoinConfirmation(event.target.value)}
+                placeholder="Confirm"
+                autoComplete="off"
+                disabled={unjoining}
+                className="h-10 border-red-700/35 bg-paper"
+              />
+              <div className="mt-5 flex justify-end gap-3">
+                <Button type="button" variant="outline" onClick={() => setShowUnjoinDialog(false)} disabled={unjoining} className="bg-[#fffcf5]">
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={unjoinConfirmation !== "Confirm" || unjoining}
+                  onClick={handleUnjoinGroup}
+                  className="border-red-700 bg-red-700 text-white hover:border-red-800 hover:bg-red-800 disabled:border-ink/25 disabled:bg-paper disabled:text-ink-soft disabled:opacity-100"
+                >
+                  <UserMinus />
+                  {unjoining ? "Unjoining..." : "Unjoin group"}
+                </Button>
+              </div>
+            </section>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   );

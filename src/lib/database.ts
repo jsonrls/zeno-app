@@ -53,10 +53,10 @@ export async function getStudyGroup(id: string): Promise<StudyGroup | null> {
     .from('study_groups')
     .select(`
       *,
-      profiles:creator_id(name, email),
+      profiles:creator_id(name),
       group_members(
         *,
-        profiles:user_id(name, email)
+        profiles:user_id(name)
       ),
       tags(*)
     `)
