@@ -1,5 +1,6 @@
 # dependencies
 /node_modules
+/admin/node_modules
 /.pnp
 .pnp.js
 
@@ -8,6 +9,7 @@
 
 # next.js
 /.next/
+/admin/.next/
 /.next-dev/
 /out/
 
@@ -22,13 +24,20 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+/admin/.env
+/admin/.env.local
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/admin/next-env.d.ts
+/admin/tsconfig.tsbuildinfo
 
 # OS files
 .DS_Store
 
 # Agent directories
 .devin/
+/admin
+.vercel
+.env*

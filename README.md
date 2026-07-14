@@ -41,6 +41,11 @@ A modern, secure study group management platform built with Next.js, featuring u
 - Secure database functions
 - Leaked password protection
 
+### 🗂️ Admin Operations
+- The private admin dashboard now lives in the standalone [`admin/`](./admin)
+  Next.js project, with its own deployment root, authentication flow, and
+  Vercel serverless API routes.
+
 ## 🛠️ Technology Stack
 
 ### Frontend
@@ -177,6 +182,12 @@ npm run lint
    - Apply the tracked migrations
    - Use least-privilege grants and policies for browser access
 
+### Admin Setup
+
+See [`admin/README.md`](./admin/README.md). Deploy the admin app as a separate
+Vercel project whose Root Directory is `admin`; its server-only Supabase secret
+does not belong in this main user-facing app.
+
 ## 🛡️ Security Highlights
 
 ### Database Security
@@ -207,7 +218,7 @@ npm run lint
 The easiest deployment option:
 
 1. Connect your repository to [Vercel](https://vercel.com)
-2. Add environment variables in Vercel dashboard
+2. Add this application's environment variables in the Vercel dashboard
 3. Deploy automatically on push to main branch
 
 ### Other Platforms

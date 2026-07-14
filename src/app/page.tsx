@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { Users, BookOpen, Calendar, Zap, ArrowRight, TriangleAlert } from "lucide-react";
+import { Users, BookOpen, Calendar, Zap, ArrowRight, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { siteDescription } from "@/lib/site";
 
@@ -127,9 +127,9 @@ export default function Home() {
         <div className="relative mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-12">
           {/* Left: statement */}
           <div className="lg:col-span-7">
-            <p className="animate-fade-up mb-8 inline-flex -rotate-1 items-center gap-2 border-[1.5px] border-dashed border-amber-700/60 bg-amber-200/40 px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-900">
-              <TriangleAlert className="h-3.5 w-3.5" />
-              Under development — pardon our dust
+            <p className="animate-fade-up mb-8 inline-flex -rotate-1 items-center gap-2 border-[1.5px] border-dashed border-emerald-700/60 bg-emerald-100/60 px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-900">
+              <Circle className="h-2.5 w-2.5 fill-emerald-600 text-emerald-600" />
+              Live
             </p>
 
             <div className="animate-fade-up [animation-delay:90ms]">
@@ -314,14 +314,6 @@ export default function Home() {
 
       {/* ============ CTA ============ */}
       <section className="texture-grain relative overflow-hidden bg-ink px-4 py-24">
-        <Image
-          aria-hidden
-          src="/images/1-transparent.png"
-          alt=""
-          width={250}
-          height={100}
-          className="pointer-events-none absolute -right-6 -bottom-2 w-[18rem] select-none opacity-[0.09] grayscale brightness-0 invert md:-right-10 md:w-[30rem]"
-        />
         <div className="relative mx-auto max-w-3xl text-center">
           <p className="mb-6 flex items-center justify-center gap-3 font-mono text-[11px] font-medium uppercase tracking-[0.25em] text-purple-300/90">
             <span aria-hidden className="h-px w-10 bg-purple-300/50" />
