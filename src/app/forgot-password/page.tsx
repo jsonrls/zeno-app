@@ -86,7 +86,7 @@ export default function ForgotPassword() {
             >
               Send Another Email
             </Button>
-            
+
             <div className="text-center">
               <Link
                 href="/login"
@@ -158,6 +158,7 @@ export default function ForgotPassword() {
           {/* Submit Button */}
           <Button
             type="submit"
+            size="lg"
             disabled={loading}
             className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3"
           >
@@ -173,47 +174,6 @@ export default function ForgotPassword() {
             )}
           </Button>
         </form>
-
-        {/* Back to Login Link */}
-        <div className="text-center">
-          <Link
-            href="/login"
-            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
-          >
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Back to Sign In
-          </Link>
-        </div>
-
-        {/* Help Section */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">
-            Need Help?
-          </h3>
-          <p className="text-xs text-gray-600 mb-3">
-            If you don't have access to your email or continue having issues, please contact our support team.
-          </p>
-          <div className="text-center">
-            <p className="text-xs text-gray-500">
-              Remember your password?{" "}
-              <Link href="/login" className="font-medium text-purple-600 hover:text-purple-500">
-                Sign in here
-              </Link>
-            </p>
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-gradient-to-br from-purple-50 via-white to-purple-100 text-gray-500">
-              Or
-            </span>
-          </div>
-        </div>
 
         {/* Alternative Actions */}
         <div className="text-center space-y-2">
